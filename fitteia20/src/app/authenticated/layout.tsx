@@ -25,12 +25,12 @@ const Authenticated: FC<AuthenticatedProps> = ({ children }) => {
   }
 
   return (
-    <div className="flex min-h-screen flex-1 flex-col pb-20 md:flex-row lg:pb-0">
+    <div className="flex min-h-screen flex-1 flex-col md:flex-row ">
       <NavBar />
 
       <TopographyPattern />
 
-      <div className="top-0 flex w-full flex-col items-center gap-y-6 px-7 py-5 sm:ml-0 sm:px-10 sm:py-7">
+      <div className="flex w-full flex-col items-center gap-y-6 px-10 py-7 mt-14">
         {children}
       </div>
     </div>

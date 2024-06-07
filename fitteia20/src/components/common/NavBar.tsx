@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { FC, useState } from "react";
+import { FC, use, useState } from "react";
 import {
   InformationCircleIcon,
   UserCircleIcon,
@@ -9,16 +9,18 @@ import {
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { Transition } from "@headlessui/react";
-import { usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 
 import { LogoSmall } from "../visuals/logos/Logo";
-
+import clsx from "clsx";
+import Link from "next/link";
 
 const NavBar: FC = () => {
   // TO DO: Allow changes in Profile Picture
 
   // Get the current location root path
-  const location = "/" + usePathname().split("/")[2];
+  const currentUrl = usePathname();
+  const location = "/" + currentUrl.split("/")[2];
 
   // Sign out functionality
   const router = useRouter();
@@ -35,20 +37,20 @@ const NavBar: FC = () => {
   // State to store the menu open state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  console.log(isMenuOpen);
-
   return (
-    <div className="fixed top-0 z-20 flex h-fit w-full flex-row  items-center justify-between bg-[#1B0300] bg-opacity-50 px-6 py-3 backdrop-blur-sm">
-      <h3 className="flex whitespace-nowrap items-end  font-semibold justify-center text-lg flex-row gap-x-4 text-stone-500">
+    <div className="fixed top-0 z-20 flex h-fit w-full flex-row  items-center justify-between bg-white/[0.025] border-b border-white/[0.075] px-6 py-3 backdrop-blur-sm">
+      <h3 className="flex whitespace-nowrap items-end  font-semibold justify-center text-lg flex-row gap-x-4 text-zinc-500">
         <LogoSmall />
         {location}
       </h3>
 
+      {location !== "/my-fits" && <Tabs currentUrl={currentUrl} />}
+
       <div className=" flex flex-row items-center justify-center gap-x-4 ">
-        <InformationCircleIcon className="h-7 w-7 cursor-pointer text-stone-500 transition-all duration-200 ease-in-out hover:text-stone-400" />
+        <InformationCircleIcon className="h-7 w-7 cursor-pointer text-zinc-500 transition-all duration-200 ease-in-out hover:text-zinc-400" />
 
         <div className="relative" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          <UserCircleIcon className="h-7 w-7 cursor-pointer text-stone-500 transition-all duration-200 ease-in-out hover:text-stone-400" />
+          <UserCircleIcon className="h-7 w-7 cursor-pointer text-zinc-500 transition-all duration-200 ease-in-out hover:text-zinc-400" />
           <Transition
             show={isMenuOpen}
             enter="transition ease-out duration-200"
@@ -59,7 +61,7 @@ const NavBar: FC = () => {
             leaveTo="opacity-0 translate-y-1"
             className="absolute right-0 top-12 flex w-fit flex-col items-center justify-center gap-y-2 rounded-md backdrop-blur-md"
           >
-            <div className="cursor-pointer rounded-md bg-[#1B0300] bg-opacity-90 p-2 text-stone-500 ring-1 ring-stone-600/20 backdrop-blur-md hover:text-stone-400">
+            <div className="cursor-pointer rounded-md bg-zinc-900 ring-1 ring-zinc-800 ring-inset p-2 text-zinc-500 backdrop-blur-md hover:text-zinc-400">
               <div
                 onClick={() => {
                   setIsMenuOpen(false), handleSignOut();
@@ -74,6 +76,45 @@ const NavBar: FC = () => {
           </Transition>
         </div>
       </div>
+    </div>
+  );
+};
+
+interface TabsProps {
+  currentUrl: string;
+}
+
+const Tabs: FC<TabsProps> = ({ currentUrl }) => {
+  // Fetch the fitId from the URL
+  const fitId = useParams()["fit-id"];
+
+  console.log("fitId", fitId)
+  console.log(useParams())
+
+  const tabs = [
+    { name: "Datasets", href: `/authenticated/fit-env/${fitId}/datasets` },
+    { name: "Functions", href: `/authenticated/fit-env/${fitId}/functions` },
+    { name: "Parameters", href: `/authenticated/fit-env/${fitId}/parameters` },
+  ];
+
+  return (
+    <div className="fixed w-full inset-0 flex flex-row items-center justify-center">
+      <nav className="flex flex-row gap-x-8" aria-label="Tabs">
+        {tabs.map((tab) => (
+          <Link
+            key={tab.name}
+            href={tab.href}
+            className={clsx(
+              currentUrl === tab.href
+                ? "border-white text-white"
+                : "border-transparent text-zinc-500 hover:border-zinc-400 hover:text-zinc-400",
+              "whitespace-nowrap border-b-2 py-[17px] px-1 text-sm font-medium transition-all duration-150 ease-in-out"
+            )}
+          >
+            {tab.name}
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { FC, ReactElement } from "react";
 
-import SignUpMethodMenu from "@/components/auth/signup/SignUpMethodMenu";
+import SignUpMethodMenu from "@/app/signup/SignUpMethodMenu";
 
 const SignUpMethod: FC = (): ReactElement => {
   return <SignUpMethodMenu />;

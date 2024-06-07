@@ -13,7 +13,7 @@ const AuthInput = ({ label, ...rest }: AuthInputProps) => {
       </label>
       <input
         {...rest}
-        className="block w-full appearance-none rounded-lg border-0 bg-stone-600/40 py-1.5 pl-3 pr-3 text-white transition-all duration-500 ease-in-out placeholder:text-stone-400 focus:ring-1 focus:ring-inset focus:ring-orange-700 sm:text-sm sm:leading-6"
+        className="block w-full appearance-none rounded-lg border-0 text-white bg-white/5 ring-white/10 ring-1 ring-inset backdrop-blur-3xl py-1.5 pl-3 pr-3 transition-all duration-150 ease-in-out placeholder:text-zinc-400 focus:ring-1 focus:ring-inset hover:ring-white/40 focus:ring-white/40 sm:text-sm sm:leading-6"
 
       />
     </div>
