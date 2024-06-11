@@ -9,23 +9,17 @@ import {
   PlusCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import DatasetSelection from "@/components/common/forms/DatasetSelection";
-import LabeledSwitch from "@/components/common/forms/LabeledSwitch";
 import { Function } from "@/app/types";
 
 /* Main Function Components*/
 interface MainFunctionDefinitionProps {
   functionOption: Function;
   updateMainFunction: (mainFunction: string) => void;
-  datasetNames: string[];
-  updateAppliesToDatasets: (appliesToDatasets: string[]) => void;
 }
 
 const MainFunctionDefinition: FC<MainFunctionDefinitionProps> = ({
   functionOption,
   updateMainFunction,
-  datasetNames,
-  updateAppliesToDatasets,
 }): ReactElement => {
   return (
     <div className="flex flex-col items-center px-28 gap-y-6">
@@ -45,21 +39,6 @@ const MainFunctionDefinition: FC<MainFunctionDefinitionProps> = ({
           value={functionOption.mainFunction}
           onChange={(e) => updateMainFunction(e.target.value)}
           extraPadding={true}
-        />
-      </div>
-
-      {/*Dataset selection radio group*/}
-      <div className="w-full">
-        <label
-          htmlFor="Apply to"
-          className="mb-2 block text-sm font-medium text-zinc-300"
-        >
-          Apply to
-        </label>
-        <DatasetSelection
-          datasetNames={datasetNames}
-          selectedDatasets={functionOption.appliesToDatasets}
-          updateSelectedDatasets={updateAppliesToDatasets}
         />
       </div>
     </div>
@@ -155,19 +134,17 @@ const SubfunctionDefinition: FC<SubfunctionDefinitionProps> = ({
   );
 };
 
-/* Main Component*/ 
+/* Main Component*/
 interface FunctionMenuProps {
   functionOption: Function;
   updateFunction: (id: number, functionOption: Function) => void;
   removeFunction: (id: number) => void;
-  datasetNames: string[];
 }
 
 const FunctionMenu: FC<FunctionMenuProps> = ({
   functionOption,
   updateFunction,
   removeFunction,
-  datasetNames,
 }): ReactElement => {
   // State to store the expanded state of the function menu
   const [isExpanded, setIsExpanded] = useState(false);
@@ -180,22 +157,6 @@ const FunctionMenu: FC<FunctionMenuProps> = ({
     updateFunction(functionOption.id, {
       ...functionOption,
       mainFunction,
-    });
-  };
-
-  // Function to update which datasets the function applies to
-  const updateAppliesToDatasets = (appliesToDatasets: string[]) => {
-    updateFunction(functionOption.id, {
-      ...functionOption,
-      appliesToDatasets,
-    });
-  };
-
-  // Function to update the global function state
-  const setGlobalEnabled = (enabled: boolean) => {
-    updateFunction(functionOption.id, {
-      ...functionOption,
-      global: enabled,
     });
   };
 
@@ -250,11 +211,11 @@ const FunctionMenu: FC<FunctionMenuProps> = ({
         className="h-fit w-full"
       >
         <div className="flex-col flex w-full px-3 gap-y-6 py-6">
+          
+          {/*Main function definition*/}
           <MainFunctionDefinition
             functionOption={functionOption}
             updateMainFunction={updateMainFunction}
-            datasetNames={datasetNames}
-            updateAppliesToDatasets={updateAppliesToDatasets}
           />
 
           <div className="flex flex-col items-start px-28 pb-5 gap-y-6">
@@ -270,17 +231,9 @@ const FunctionMenu: FC<FunctionMenuProps> = ({
                 "flex flex-col items-start w-full gap-y-6"
               )}
             >
-              <SubfunctionDefinition 
+              <SubfunctionDefinition
                 subfunctions={functionOption.subfunctions}
                 updateSubfunctions={updateSubfunctions}
-               />
-
-              <LabeledSwitch
-                enabled={functionOption.global}
-                setEnabled={setGlobalEnabled}
-                label="Fit Type"
-                enabledLabel="Global"
-                disabledLabel="Individual"
               />
             </div>
           </div>

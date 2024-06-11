@@ -12,17 +12,6 @@ const Page: FC = (): ReactElement => {
   // State to store the functions
   const [functions, setFunctions] = useState<Function[]>([]);
 
-  // State to store the dataset names
-  const [datasetNames, setDatasetNames] = useState<string[]>([]);
-
-  // Fetch the dataset names on load
-  useEffect(() => {
-    const datasets = getDatasets();
-    if (datasets.length > 0) {
-      setDatasetNames(datasets.map((dataset) => dataset.name));
-    }
-  }, []);
-
   // On mount fetch the functions
   useEffect(() => {
     const functions = getFunctions();
@@ -43,9 +32,10 @@ const Page: FC = (): ReactElement => {
         id: functions.length + 1,
         name: "Function " + (functions.length + 1),
         mainFunction: "y = x^2",
-        appliesToDatasets: [],
         subfunctions: ["z = x + 7"],
-        global: false,
+        dependentVariable: null,
+        independentVariable: null,
+        parameters: null,
       },
     ]);
   };
@@ -85,7 +75,6 @@ const Page: FC = (): ReactElement => {
             functionOption={functionOption}
             updateFunction={updateFunction}
             removeFunction={removeFunction}
-            datasetNames={datasetNames}
           />
         ))}
       </div>

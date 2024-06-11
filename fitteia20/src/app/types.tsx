@@ -23,9 +23,10 @@ type Function = {
   id: number;
   name: string;
   mainFunction: string;
-  appliesToDatasets: string[];
   subfunctions: string[];
-  global: boolean;
+  dependentVariable: null | string;
+  independentVariable: null | string;
+  parameters: Parameter[] | null;
 };
 
 type Parameter = {
@@ -35,7 +36,6 @@ type Parameter = {
   error: number;
   Min: number;
   Max: number;
-  appliesToFunction: string;
 };
 
 export type {
