@@ -362,3 +362,6 @@ function extractParameters(
 
   return Array.from(uniqueVars);
 }
+
+export default parseFunction;
+export type { FunctionInput, ParsedOutput };

@@ -24,9 +24,6 @@ type Function = {
   name: string;
   mainFunction: string;
   subfunctions: string[];
-  dependentVariable: null | string;
-  independentVariable: null | string;
-  parameters: Parameter[] | null;
 };
 
 type Parameter = {

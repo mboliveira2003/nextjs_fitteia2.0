@@ -1,45 +1,49 @@
-import { Transition } from "@headlessui/react";
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import clsx from "clsx";
-import React, {
-  FC,
-  ReactElement,
-  useEffect,
-  useLayoutEffect,
-  useState,
-} from "react";
+import React, { FC, ReactElement, useEffect, useState } from "react";
 
 import LabeledSwitch from "@/components/common/forms/LabeledSwitch";
 import Input from "@/components/common/forms/input";
-import DatasetSelection from "@/components/common/forms/DatasetSelection";
-import { Function, Parameter } from "@/app/types";
-import { parseString } from "@/utils/extractParameters";
+import { SingleElementSelection } from "@/components/common/forms/ElementSelection";
+import { Dataset, Function, Parameter } from "@/app/types";
+import parseFunction, { FunctionInput } from "@/utils/parseFunction";
+import MyChart from "@/components/common/charts/ScatterPlot";
 
-interface ParameterDefenitionMenuProps {
+interface FittingDefinitionMenuProps {
   parameters: Parameter[];
   updateMax: (index: number, value: number) => void;
   updateMin: (index: number, value: number) => void;
   updateFixed: (index: number, value: boolean) => void;
   updateInitialValue: (index: number, value: number) => void;
-  functionId: number;
+  selectedFunction: Function;
+  selectedDataset: Dataset;
+  updateSelectedFunction: (functionName: string) => void;
+  updateSelectedDataset: (datasetName: string) => void;
+  globalFit: boolean;
+  setGlobalFit: (value: boolean) => void;
 }
 
-const ParameterDefenitionMenu: FC<ParameterDefenitionMenuProps> = ({
+const FittingDefinitionMenu: FC<FittingDefinitionMenuProps> = ({
   parameters,
   updateMax,
   updateMin,
   updateFixed,
   updateInitialValue,
-  functionId,
+  selectedFunction,
+  selectedDataset,
+  updateSelectedFunction,
+  updateSelectedDataset,
+  globalFit,
+  setGlobalFit,
 }): ReactElement => {
   return (
     <div className="flex flex-col items-start w-full gap-y-8">
       {/*Header and Fit button*/}
       <div className="flex flex-row w-full justify-between items-center">
         <div className="flex flex-col items-start w-full">
-          <h1 className="text-white font-semibold text-lg">Parameters</h1>
+          <h1 className="text-white font-semibold text-lg">
+            Fitting Environment
+          </h1>
           <p className="text-zinc-500 text-base font-normal">
-            Manipulate the parameters of function {functionId}
+            Choose a function and dataset to fit
           </p>
         </div>
 
@@ -49,138 +53,195 @@ const ParameterDefenitionMenu: FC<ParameterDefenitionMenuProps> = ({
         </button>
       </div>
 
-      <table className="min-w-full divide-y divide-zinc-500">
-        {/*Table header*/}
-        <thead>
-          <tr className="">
-            <th
-              scope="col"
-              className="py-2 pl-10 pr-5 text-left text-sm font-semibold"
-            ></th>
-            <th
-              scope="col"
-              className="py-2 px-5 text-left text-sm font-semibold"
-            ></th>
-            <th
-              scope="col"
-              className="py-2 px-5 text-left text-sm font-semibold "
-            >
-              <div className="block w-full rounded-md  border-0 bg-transparent text-zinc-200 transition-all duration-200 placeholder:text-zinc-400 focus:ring-inset focus:ring-zinc-600 sm:text-sm sm:leading-6">
-                Min
-              </div>
-            </th>
-            <th
-              scope="col"
-              className="py-2 px-5 text-left text-sm font-semibold "
-            >
-              <div className="block w-full rounded-md  border-0 bg-transparent text-zinc-200 transition-all duration-200 placeholder:text-zinc-400 focus:ring-inset focus:ring-zinc-600 sm:text-sm sm:leading-6">
-                Initial Value
-              </div>
-            </th>
-            <th
-              scope="col"
-              className="py-2 px-5 text-left text-sm font-semibold "
-            >
-              <div className="block w-full rounded-md  border-0 bg-transparent text-zinc-200 transition-all duration-200 placeholder:text-zinc-400 focus:ring-inset focus:ring-zinc-600 sm:text-sm sm:leading-6">
-                Max
-              </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-zinc-500 text-zinc-400">
-          {parameters.map((parameter, index) => (
-            <tr
-              key={index}
-              className="animate-in fade-in slide-in-from-top-4 duration-300 "
-            >
-              <td className="whitespace-nowrap py-3 pl-10 pr-5 text-base font-semibold text-zinc-300">
-                {parameter.name}
-              </td>
-              {/*Switch to toggle between fixed and free parameters*/}
-              <td className="whitespace-nowrap py-3 px-5 text-sm w-fit flex items-center font-medium">
-                <LabeledSwitch
-                  enabledLabel="Fixed"
-                  disabledLabel="Free"
-                  enabled={parameter.fixed}
-                  setEnabled={(value) => updateFixed(index, value)}
-                />
-              </td>
-              <td className="whitespace-nowrap py-3 px-5 text-sm text-zinc-500">
-                <Input
-                  type="number"
-                  name={"parameter-" + index + "-min"}
-                  id={"parameter-" + index + "-min"}
-                  value={parameter.Min || -1000}
-                  onChange={(e) => {
-                    updateMin(index, parseFloat(e.target.value));
-                  }}
-                />
-              </td>
-              <td className="whitespace-nowrap py-3 px-5 text-sm text-zinc-500">
-                <Input
-                  type="number"
-                  name={"parameter" + index + "-initial-value"}
-                  id={"parameter-" + index + "-initial-value"}
-                  value={parameter.initialValue || 0}
-                  onChange={(e) => {
-                    updateInitialValue(index, parseFloat(e.target.value));
-                  }}
-                />
-              </td>
-              <td className="whitespace-nowrap py-3 pr-10 pl-5  text-sm text-zinc-500">
-                <Input
-                  type="number"
-                  name={"parameter-" + index + "-max"}
-                  id={"parameter-" + index + "-max"}
-                  value={parameter.Max || 1000}
-                  onChange={(e) => {
-                    updateMax(index, parseFloat(e.target.value));
-                  }}
-                />
-              </td>
+      <div className="flex flex-row items-center gap-x-6 w-full">
+        <div className="w-full">
+          <label
+            htmlFor="Choose a function"
+            className="mb-2 block text-sm font-medium text-zinc-300"
+          >
+            Choose a function
+          </label>
+
+          <SingleElementSelection
+            selectedElementName={selectedFunction.name}
+            updateSelectedElementName={updateSelectedFunction}
+            elementType="function"
+          />
+        </div>
+
+        <div className="w-full">
+          <label
+            htmlFor="Choose a function"
+            className="mb-2 block text-sm font-medium text-zinc-300"
+          >
+            Choose a Dataset
+          </label>
+
+          <SingleElementSelection
+            selectedElementName={selectedDataset.name}
+            updateSelectedElementName={updateSelectedDataset}
+            elementType="dataset"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-y-6 w-full">
+        <div className="w-full">
+          <label
+            htmlFor="Choose a function"
+            className="mb-2 block text-sm font-medium text-zinc-300"
+          >
+            Fit Type
+          </label>
+
+          <LabeledSwitch
+            enabledLabel="Individual"
+            disabledLabel="Global"
+            enabled={globalFit}
+            setEnabled={setGlobalFit}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col items-start w-full ">
+        <label
+          htmlFor="Choose a function"
+          className="mb-2 block text-sm font-medium text-zinc-300"
+        >
+          Parameters
+        </label>
+        <table className="min-w-full divide-y divide-zinc-500 ">
+          {/*Table header*/}
+
+          <thead>
+            <tr className="">
+              <th
+                scope="col"
+                className="py-2 pl-10 pr-5 text-left text-sm font-semibold"
+              ></th>
+              <th
+                scope="col"
+                className="py-2 px-5 text-left text-sm font-semibold"
+              ></th>
+              <th
+                scope="col"
+                className="py-2 px-5 text-left text-sm font-semibold "
+              >
+                <div className="block w-full rounded-md  border-0 bg-transparent text-zinc-200 transition-all duration-200 placeholder:text-zinc-400 focus:ring-inset focus:ring-zinc-600 sm:text-sm sm:leading-6">
+                  Min
+                </div>
+              </th>
+              <th
+                scope="col"
+                className="py-2 px-5 text-left text-sm font-semibold "
+              >
+                <div className="block w-full rounded-md  border-0 bg-transparent text-zinc-200 transition-all duration-200 placeholder:text-zinc-400 focus:ring-inset focus:ring-zinc-600 sm:text-sm sm:leading-6">
+                  Initial Value
+                </div>
+              </th>
+              <th
+                scope="col"
+                className="py-2 px-5 text-left text-sm font-semibold "
+              >
+                <div className="block w-full rounded-md  border-0 bg-transparent text-zinc-200 transition-all duration-200 placeholder:text-zinc-400 focus:ring-inset focus:ring-zinc-600 sm:text-sm sm:leading-6">
+                  Max
+                </div>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-zinc-500 text-zinc-400">
+            {parameters.map((parameter, index) => (
+              <tr
+                key={index}
+                className="animate-in fade-in slide-in-from-top-4 duration-300 "
+              >
+                <td className="whitespace-nowrap py-3 pl-10 pr-5 text-base font-semibold text-zinc-300">
+                  {parameter.name}
+                </td>
+                {/*Switch to toggle between fixed and free parameters*/}
+                <td className="whitespace-nowrap py-3 px-5 text-sm w-fit flex items-center font-medium">
+                  <LabeledSwitch
+                    enabledLabel="Fixed"
+                    disabledLabel="Free"
+                    enabled={parameter.fixed}
+                    setEnabled={(value) => updateFixed(index, value)}
+                  />
+                </td>
+                <td className="whitespace-nowrap py-3 px-5 text-sm text-zinc-500">
+                  <Input
+                    type="number"
+                    name={"parameter-" + index + "-min"}
+                    id={"parameter-" + index + "-min"}
+                    value={parameter.Min || -1000}
+                    onChange={(e) => {
+                      updateMin(index, parseFloat(e.target.value));
+                    }}
+                  />
+                </td>
+                <td className="whitespace-nowrap py-3 px-5 text-sm text-zinc-500">
+                  <Input
+                    type="number"
+                    name={"parameter" + index + "-initial-value"}
+                    id={"parameter-" + index + "-initial-value"}
+                    value={parameter.initialValue || 0}
+                    onChange={(e) => {
+                      updateInitialValue(index, parseFloat(e.target.value));
+                    }}
+                  />
+                </td>
+                <td className="whitespace-nowrap py-3 pr-10 pl-5  text-sm text-zinc-500">
+                  <Input
+                    type="number"
+                    name={"parameter-" + index + "-max"}
+                    id={"parameter-" + index + "-max"}
+                    value={parameter.Max || 1000}
+                    onChange={(e) => {
+                      updateMax(index, parseFloat(e.target.value));
+                    }}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
 interface ParameterResultsMenuProps {
   parameters: Parameter[];
-  datasetNames: string[];
-  selectedDatasets: string[];
-  updateSelectedDatasets: (dataset: string[]) => void;
+  selectedDataset: Dataset;
+  selectedFunction: Function;
 }
 
 const ParameterResultsMenu: FC<ParameterResultsMenuProps> = ({
   parameters,
-  datasetNames,
-  selectedDatasets,
-  updateSelectedDatasets,
+  selectedDataset,
+  selectedFunction,
 }): ReactElement => {
+  // Fetch the fitted points for the current selected dataset and function
+  // For now generate 20 random datapoints
+  const fittedPoints = Array.from({ length: 20 }, () => ({
+    independentVariable: Math.random() * 10,
+    independentVariableError: Math.random() * 0.5,
+    dependentVariable: Math.random() * 10,
+    dependentVariableError: Math.random() * 0.5,
+  }));
+
   return (
     <div className="w-full flex flex-col gap-y-8 pt-10">
       <div className="flex flex-col items-start w-full">
         <h1 className="text-white font-semibold text-lg">Results</h1>
         <p className="text-zinc-500 text-base font-normal">
-          Select a dataset to view a fitting result
+          Showing results for {selectedFunction.name} and {selectedDataset.name}
         </p>
       </div>
 
-      <div className="w-full">
-        <label
-          htmlFor="View results for"
-          className="mb-2 block text-sm font-medium text-zinc-300"
-        >
-          View results for
-        </label>
-        <DatasetSelection
-          datasetNames={datasetNames}
-          selectedDatasets={selectedDatasets}
-          updateSelectedDatasets={updateSelectedDatasets}
-        />
-      </div>
+      <MyChart
+        dataPoints={selectedDataset.datapoints}
+        fittedPoints={fittedPoints}
+      />
 
       <div className="flex flex-col items-start gap-y-4">
         {/*Parameters Table*/}
@@ -290,41 +351,54 @@ const ParameterResultsMenu: FC<ParameterResultsMenuProps> = ({
   );
 };
 
-interface ParametersMenuProps {
-  currentFunction: Function;
-  selectedDatasets: string[];
-  updateSelectedDatasets: (dataset: string[]) => void;
+interface FittingMenuProps {
+  selectedFunction: Function;
+  selectedDataset: Dataset;
+  updateSelectedDataset: (datasetName: string) => void;
+  updateSelectedFunction: (functionName: string) => void;
+  globalFit: boolean;
+  setGlobalFit: (value: boolean) => void;
 }
 
-const ParametersMenu: FC<ParametersMenuProps> = ({
-  currentFunction,
-  selectedDatasets,
-  updateSelectedDatasets,
+const FittingMenu: FC<FittingMenuProps> = ({
+  selectedFunction,
+  selectedDataset,
+  updateSelectedDataset,
+  updateSelectedFunction,
+  globalFit,
+  setGlobalFit,
 }): ReactElement => {
-  
-  // State to store the expansion state of the menu
-  const [isExpanded, setIsExpanded] = useState(false);
-
   // State to store the parameters
   const [parameters, setParameters] = useState<Parameter[]>([]);
 
-  // Find the parameters of the function whenever on mount
+  // Whenever the selected function changes, update the parameters
   useEffect(() => {
-    const mainFunction = currentFunction.mainFunction;
-    const subFunctions = currentFunction.subfunctions;
+    console.log("I was called!");
+    const functionInput: FunctionInput = {
+      mainFunction: selectedFunction.mainFunction,
+      subfunctions: selectedFunction.subfunctions,
+    };
 
-    const allowedVariableNames = ["x", "y", "z", "w"];
+    console.log("Function Input:", functionInput);
 
-    // The parameters correspond to all the characters or small words in the main function and subfunctions that are not
-    // part of the allowed variable names, are not numbers and are not mathemathical operators
+    const parsedOutput = parseFunction(functionInput);
 
-    // Extract the parameters from the main function
+    console.log("Parsed Output:", parsedOutput);
+    if (typeof parsedOutput !== "string") {
+      setParameters(
+        parsedOutput.parameters.map((parameter) => ({
+          name: parameter,
+          Min: -1000,
+          Max: 1000,
+          fixed: false,
+          initialValue: 0,
+          error: 0,
+        }))
+      );
+    }
+  }, [selectedFunction]);
 
-
-   
-  }, []);
-
-  console.log("Parameters for ", currentFunction.name, parameters);
+  console.log(parameters);
 
   // Upadate the parameters min value
   const updateMin = (index: number, value: number) => {
@@ -355,60 +429,27 @@ const ParametersMenu: FC<ParametersMenuProps> = ({
   };
 
   return (
-    <div
-      key={currentFunction.id}
-      className={clsx(
-        " items-start flex flex-col cursor-pointer text-sm group justify-center text-zinc-300 font-semibold  transition-all duration-300 ease-in-out"
-      )}
-    >
-      <div
-        onClick={() => setIsExpanded(!isExpanded)}
-        className={clsx(
-          isExpanded
-            ? "bg-zinc-500 bg-opacity-20"
-            : "hover:bg-zinc-600 hover:bg-opacity-20",
-          "w-full h-full flex flex-row items-center gap-x-1.5 transition-all ease-in-out duration-300 px-3 py-2"
-        )}
-      >
-        {currentFunction.name}
-        {isExpanded ? (
-          <ChevronDownIcon className="h-5 w-5 transform rotate-180" />
-        ) : (
-          <ChevronDownIcon className="h-5 w-5" />
-        )}
-      </div>
-
-      <Transition
-        as="div"
-        show={isExpanded}
-        appear={true}
-        enter="transition ease-in-out duration-300 transform origin-top"
-        enterFrom="opacity-0 scale-y-0"
-        enterTo="opacity-100 scale-y-100"
-        leave="transition ease-in-out duration-300 transform origin-top hidden"
-        leaveFrom="opacity-100 scale-100"
-        leaveTo="opacity-0 scale-0"
-        className="h-fit w-full"
-      >
-        <div className="flex-col flex w-full px-24 py-8 items-center divide-y divide-zinc-600">
-          <ParameterDefenitionMenu
-            parameters={parameters}
-            updateMax={updateMax}
-            updateMin={updateMin}
-            updateFixed={updateFixed}
-            updateInitialValue={updateInitialValue}
-            functionId={currentFunction.id}
-          />
-          <ParameterResultsMenu
-            parameters={parameters}
-            datasetNames={currentFunction.appliesToDatasets}
-            updateSelectedDatasets={updateSelectedDatasets}
-            selectedDatasets={selectedDatasets}
-          />
-        </div>
-      </Transition>
+    <div className="flex flex-col w-full divide-y divide-zinc-500">
+      <FittingDefinitionMenu
+        parameters={parameters}
+        updateMax={updateMax}
+        updateMin={updateMin}
+        updateFixed={updateFixed}
+        updateInitialValue={updateInitialValue}
+        selectedFunction={selectedFunction}
+        selectedDataset={selectedDataset}
+        updateSelectedFunction={updateSelectedFunction}
+        updateSelectedDataset={updateSelectedDataset}
+        globalFit={globalFit}
+        setGlobalFit={setGlobalFit}
+      />
+      <ParameterResultsMenu
+        parameters={parameters}
+        selectedDataset={selectedDataset}
+        selectedFunction={selectedFunction}
+      />
     </div>
   );
 };
 
-export default ParametersMenu;
+export default FittingMenu;
