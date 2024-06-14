@@ -5,6 +5,13 @@ type Datapoint = {
   dependentVariableError: number;
 };
 
+type PropagatedDatapoint = {
+  independentVariable: number;
+  dependentVariable: number;
+  propagatedDependentVariableError: number;
+};
+
+
 type AuxiliarIndependentVariable = {
   name: string;
   value: number;
@@ -35,10 +42,33 @@ type Parameter = {
   Max: number;
 };
 
+type FitRequest = {
+  AscaleX: string;
+  AscaleY: string;
+  Funcx0: string;
+  Funcy0: string;
+  SelectedDataSet: string;
+  Tags: string[];
+  Num: number;
+  Dados: string;
+  FitType: string;
+  Function: string;
+  Parameters: string;
+  [key: string]: any;
+  X: string;
+  Xmax: string;
+  Xmin: string;
+  Y: string;
+  Ymax: string;
+  Ymin: string;
+};
+
 export type {
   Dataset,
   Datapoint,
+  PropagatedDatapoint,
   AuxiliarIndependentVariable,
   Function,
   Parameter,
+  FitRequest,
 };

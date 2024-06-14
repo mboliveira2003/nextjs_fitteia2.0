@@ -6,6 +6,7 @@ type FunctionInput = {
 type ParsedOutput = {
   dependentVar: string;
   independentVar: string;
+  processedFunction: string;
   parameters: string[];
 };
 
@@ -36,6 +37,9 @@ function parseFunction(input: FunctionInput): ParsedOutput | string {
   // Combine functions
   const combinedFunction = combineFunctions(mainFunction, subfunctions);
 
+  // Process the combined function
+  const processedFunction = processCombinedFunction(combinedFunction, dependentVar, independentVar);
+
   // Extract parameters
   const parameters = extractParameters(
     combinedFunction,
@@ -47,6 +51,7 @@ function parseFunction(input: FunctionInput): ParsedOutput | string {
   return {
     dependentVar,
     independentVar,
+    processedFunction,
     parameters,
   };
 }
@@ -57,7 +62,7 @@ function checkMainFunction(mainFunction: string): [string, string] | string {
   const mainRegex = /^([a-zA-Z0-9_]+)\(([a-zA-Z0-9_]+)\)\s*=\s*.*$/;
   const match = mainFunction.match(mainRegex);
   if (!match) {
-    return "Main function does not match the format y(x) = ...";
+    return "The main function does not match the format y(x) = ...";
   }
   return [match[1], match[2]];
 }
@@ -73,14 +78,14 @@ function checkSubfunctions(
   for (const sub of subfunctions) {
     const match = sub.match(subRegex);
     if (!match) {
-      return "Subfunction does not match the format z(x) = ...";
+      return `The subfunction "${sub}" does not match the format z(x) = ...`;
     }
     const [_, subVar, subIndVar] = match;
     if (subIndVar !== independentVar) {
-      return `Independent variable in subfunction "${sub}" must be the same as in the main function.`;
+      return `The independent variable in subfunction "${sub}" must be the same as in the main function.`;
     }
     if (subVar === dependentVar) {
-      return `Subfunction "${sub}" cannot use the same dependent variable as the main function.`;
+      return `The subfunction "${sub}" cannot use the same dependent variable as the main function.`;
     }
   }
   return true;
@@ -104,6 +109,26 @@ function combineFunctions(
     combinedFunction = combinedFunction.replace(regex, subExpressionWrapped);
   }
   return combinedFunction;
+}
+
+function processCombinedFunction(combinedFunction: string, dependentVar: string, independentVar: string): string {
+  // Create a regex to remove the introductory part of the combined function
+  const combinedFunctionRegex = new RegExp(
+    `^${dependentVar}\\(${independentVar}\\)\\s*=\\s*`
+  );
+  const combinedFunctionMatch = combinedFunction.match(combinedFunctionRegex);
+
+  // If there was no match, return an error message
+  if (!combinedFunctionMatch) {
+    return "Combined function does not match the format y(x) = ...";
+  }
+
+  // Rturn the processed function
+  const processedFunction = combinedFunction.slice(
+    combinedFunctionMatch[0].length
+  );
+
+  return processedFunction;
 }
 
 function extractParameters(

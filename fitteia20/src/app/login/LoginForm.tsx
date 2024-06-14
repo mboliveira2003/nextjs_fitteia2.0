@@ -128,7 +128,7 @@ const LoginForm: FC = (): ReactElement => {
         {/**Alert message for login error*/}
         <AuthAlert
           alertVisible={loginError}
-          icon={<ExclamationTriangleIcon />}
+          icon={<ExclamationTriangleIcon className="h-10 w-10 mt-1" />}
           title="Invalid authentication data!"
           message="Verify your email and password and try again."
           furtherUp={true}

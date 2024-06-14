@@ -61,7 +61,7 @@ const NavBar: FC = () => {
             leaveTo="opacity-0 translate-y-1"
             className="absolute right-0 top-12 flex w-fit flex-col items-center justify-center gap-y-2 rounded-md backdrop-blur-md"
           >
-            <div className="cursor-pointer rounded-md bg-zinc-900 ring-1 ring-zinc-800 ring-inset p-2 text-zinc-500 backdrop-blur-md hover:text-zinc-400">
+            <div className="cursor-pointer rounded-md bg-zinc-800 ring-1 ring-zinc-700 ring-inset p-2 text-zinc-400 backdrop-blur-md hover:text-zinc-300">
               <div
                 onClick={() => {
                   setIsMenuOpen(false), handleSignOut();
@@ -94,7 +94,7 @@ const Tabs: FC<TabsProps> = ({ currentUrl }) => {
   const tabs = [
     { name: "Datasets", href: `/authenticated/fit-env/${fitId}/datasets` },
     { name: "Functions", href: `/authenticated/fit-env/${fitId}/functions` },
-    { name: "Parameters", href: `/authenticated/fit-env/${fitId}/parameters` },
+    { name: "Fitting Environment", href: `/authenticated/fit-env/${fitId}/fit` },
   ];
 
   return (

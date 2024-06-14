@@ -71,7 +71,7 @@ const PasswordRecoverForm: FC = (): ReactElement => {
         {/**Email sent sucessfully alert*/}
         <AuthAlert
           alertVisible={emailSent === true}
-          icon={<CheckCircleIcon />}
+          icon={<CheckCircleIcon className="w-10 h-10 mt-1" />}
           title="Recovery email sent sucessfully!"
           message="Check your inbox and follow the instructions."
         />
@@ -79,7 +79,7 @@ const PasswordRecoverForm: FC = (): ReactElement => {
         {/**Email not sent alert*/}
         <AuthAlert
           alertVisible={emailSent === false}
-          icon={<ExclamationTriangleIcon />}
+          icon={<ExclamationTriangleIcon className="w-10 h-10 mt-1"/>}
           title="Error sending the verification email!"
           message="Verify your email and try again."
         />

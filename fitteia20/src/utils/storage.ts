@@ -1,4 +1,4 @@
-import { Dataset, Function } from "@/app/types";
+import { Dataset, Function, Parameter } from "@/app/types";
 
 type JsonObject = Record<string, any>;
 
@@ -41,5 +41,84 @@ export const getFunctions = (): Function[] => {
 export const clearFunctions = (): void => {
     sessionStorage.removeItem('functions');
 }
+
+export const updateParameters = (parameters: Parameter[]): void => {
+    sessionStorage.setItem('parameters', JSON.stringify(parameters));
+}
+
+export const getParameters = (): Parameter[] => {
+    const parameters = sessionStorage.getItem('parameters');
+    return parameters ? JSON.parse(parameters) : [];
+}
+
+export const clearParameters = (): void => {
+    sessionStorage.removeItem('parameters');
+}
+
+export const updateFitType = (fitType: boolean): void => {
+    sessionStorage.setItem('fitType', JSON.stringify(fitType));
+}
+
+export const getFitType = (): boolean => {
+    const fitType = sessionStorage.getItem('fitType');
+    return fitType ? JSON.parse(fitType) : false;
+}
+
+export const clearFitType = (): void => {
+    sessionStorage.removeItem('fitType');
+}
+
+export const updateIndepentVariable = (independentVariable: string): void => {
+    sessionStorage.setItem('independentVariable', JSON.stringify(independentVariable));
+}
+
+export const getIndependentVariable = (): string => {
+    const independentVariable = sessionStorage.getItem('independentVariable');
+    return independentVariable ? JSON.parse(independentVariable) : '';
+}
+
+export const clearIndependentVariable = (): void => {
+    sessionStorage.removeItem('independentVariable');
+}
+
+export const updateDependentVariable = (dependentVariable: string): void => {
+    sessionStorage.setItem('dependentVariable', JSON.stringify(dependentVariable));
+}
+
+export const getDependentVariable = (): string => {
+    const dependentVariable = sessionStorage.getItem('dependentVariable');
+    return dependentVariable ? JSON.parse(dependentVariable) : '';
+}
+
+export const clearDependentVariable = (): void => {
+    sessionStorage.removeItem('dependentVariable');
+}
+
+export const updateProcessedFunction = (processedFunction: string): void => {
+    sessionStorage.setItem('processedFunction', JSON.stringify(processedFunction));
+}
+
+export const getProcessedFunction = (): string => {
+    const processedFunction = sessionStorage.getItem('processedFunction');
+    return processedFunction ? JSON.parse(processedFunction) : '';
+}
+
+export const clearProcessedFunction = (): void => {
+    sessionStorage.removeItem('processedFunction');
+}
+
+export const updateSelectedDataset = (dataset: Dataset): void => {
+    sessionStorage.setItem('selectedDataset', JSON.stringify(dataset));
+}
+
+export const getSelectedDataset = (): Dataset | null => {
+    const selectedDataset = sessionStorage.getItem('selectedDataset');
+    return selectedDataset ? JSON.parse(selectedDataset) : null;
+}
+
+export const clearSelectedDataset = (): void => {
+    sessionStorage.removeItem('selectedDataset');
+}
+
 
 

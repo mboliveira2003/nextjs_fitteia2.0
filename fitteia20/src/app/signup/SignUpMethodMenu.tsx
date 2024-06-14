@@ -81,7 +81,7 @@ const SignUpMethodMenu = () => {
 
       <AuthAlert
         alertVisible={loginError}
-        icon={<ExclamationTriangleIcon />}
+        icon={<ExclamationTriangleIcon className="w-10 h-10 mt-1" />}
         title="Error signing up with Google!"
         message="Try again later or sign up with email."
       />

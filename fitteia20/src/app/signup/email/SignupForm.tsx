@@ -155,7 +155,7 @@ const SignupForm: FC = (): ReactElement => {
         {/* Account exists alert */}
         <AuthAlert
           alertVisible={alertVisible}
-          icon={<ExclamationTriangleIcon />}
+          icon={<ExclamationTriangleIcon className="w-10 h-10 mt-1" />}
           title="This account already exists!"
           message="Change your email and try again."
         />
@@ -163,7 +163,7 @@ const SignupForm: FC = (): ReactElement => {
         {/*Password match alert*/}
         <AuthAlert
           alertVisible={passwordMatchAlertVisible}
-          icon={<ExclamationTriangleIcon />}
+          icon={<ExclamationTriangleIcon className="w-10 h-10 mt-1"/>}
           title="The passwords don't match!"
           message="Verify your password and try again."
         />
@@ -171,7 +171,7 @@ const SignupForm: FC = (): ReactElement => {
         {/*Weak password alert*/}
         <AuthAlert
           alertVisible={weakPasswordAlertVisible}
-          icon={<ExclamationTriangleIcon />}
+          icon={<ExclamationTriangleIcon className="w-10 h-10 mt-1" />}
           title="Your password is weak!"
           message="Your password must be at least 6 characters long."
         />
