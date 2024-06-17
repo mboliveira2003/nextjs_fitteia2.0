@@ -6,8 +6,6 @@ import { getDatasets, getFitType, getFunctions } from "@/utils/storage";
 import { Dataset, Function } from "@/app/types";
 import FittingMenu from "./FittingMenu";
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
-import { updateSelectedDataset as updateSelectedDatasetApi } from "@/utils/storage";
-import { get } from "http";
 
 const Page: FC = (): ReactElement => {
   // Fetch the datasets and functions
@@ -31,7 +29,6 @@ const Page: FC = (): ReactElement => {
     );
     if (foundDataset) {
       setSelectedDataset(foundDataset);
-      updateSelectedDatasetApi(foundDataset);
     }
   };
 

@@ -1,35 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getDatasets,
-  getFunctions,
-  getParameters,
-  getFitType,
-  getIndependentVariable,
-  getDependentVariable,
-  getProcessedFunction,
-  getSelectedDataset,
-} from "../../../utils/storage";
 import { FitRequest } from "@/app/types";
 import calculatePropagatedErrors from "@/utils/propagateError";
+import { Dataset, Function } from "@/app/types";
 
-// The request should accept an index as an argument 
-// to determine the dataset to use
-// The index should be passed as a query parameter
+interface RequestBody {
+  selectedDataset: Dataset;
+  selectedFunction: Function;
+  isFitGlobal: boolean;
+}
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    // Fetch all necessary data
-    const selectedDataset = getSelectedDataset();
-    const functions = getFunctions();
-    const fitType = getFitType();
-    const parameters = getParameters();
-    const independentVariable = getIndependentVariable();
-    const dependentVariable = getDependentVariable();
-    const processedFunction = getProcessedFunction();
+    // Parse the JSON body of the request
+    const body: RequestBody = await req.json();
 
-    if (!selectedDataset) {
+    const { selectedDataset, selectedFunction, isFitGlobal } = body;
+
+    // Verify if all object are present in the request body
+    if (!selectedDataset || !selectedFunction || isFitGlobal === undefined) { 
       return NextResponse.json(
-        { error: "No dataset selected" },
+        { error: "Request body is missing required parameters" },
+        { status: 400 }
+      );
+    }
+
+    // Extract all the necessary parameters from the selected function
+    const parameters = selectedFunction.parameters;
+    const processedFunction = selectedFunction.processedFunction;
+    const independentVariable = selectedFunction.independentVariable;
+    const dependentVariable = selectedFunction.dependentVariable;
+
+    // Verify if all the parameters are present in selected function
+    if (
+      !parameters ||
+      !processedFunction ||
+      !independentVariable ||
+      !dependentVariable
+    ) {
+      return NextResponse.json(
+        { error: "Selected function is missing required parameters" },
         { status: 400 }
       );
     }
@@ -40,16 +49,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
     const minIndependentVariable = Math.min(...independentVariableValues);
     const maxIndependentVariable = Math.max(...independentVariableValues);
-    const independentVariableMargin = 0.15 * (maxIndependentVariable - minIndependentVariable);
+    const independentVariableMargin =
+      0.15 * (maxIndependentVariable - minIndependentVariable);
 
     // Find the Minimum and maximum values of the dependent variable
-
     const dependentVariableValues = selectedDataset.datapoints.map(
       (datapoint) => datapoint.dependentVariable
     );
     const minDependentVariable = Math.min(...dependentVariableValues);
     const maxDependentVariable = Math.max(...dependentVariableValues);
-    const dependentVariableMargin = 0.15 * (maxDependentVariable - minDependentVariable);
+    const dependentVariableMargin =
+      0.15 * (maxDependentVariable - minDependentVariable);
 
     // Calculate the propagated errors
     const propagatedDatapoints = calculatePropagatedErrors(
@@ -60,13 +70,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const dataString = propagatedDatapoints
       .map(
         (datapoint) =>
-          `${datapoint.independentVariable} ${datapoint.dependentVariable} ${datapoint.propagatedDependentVariableError}`
+          ` ${datapoint.independentVariable} ${datapoint.dependentVariable} ${datapoint.propagatedDependentVariableError} `
       )
       .join("\n");
 
-
     // Construct the jsonObject to send to the server
-
     const FitRequest: FitRequest = {
       AscaleX: "yes",
       AscaleY: "yes",
@@ -75,9 +83,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       SelectedDataSet: "tags.txt",
       Tags: ["tags.txt"],
       Num: 500,
-      Dados:
-        "# DATA dum = 1\n# TAG = tags.txt\n" + dataString,
-      FitType: fitType ? "Global" : "Individual",
+      Dados: "# DATA dum = 1\n# TAG = tags.txt\n" + dataString,
+      FitType: isFitGlobal ? "Global" : "Individual",
       Function: processedFunction,
       Parameters: parameters.map((param) => param.name).join(","),
       X: independentVariable,
@@ -104,13 +111,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     form.append("username", "mboliveira");
     form.append("file", jsonBlob, "data.json");
 
-    const response = await fetch(
-      "http://localhost:8142/fit",
-      {
-        method: "POST",
-        body: form as any, // Type assertion needed here due to FormData type incompatibility
-      }
-    );
+    const response = await fetch("http://localhost:8142/fit", {
+      method: "POST",
+      body: form as any, // Type assertion needed here due to FormData type incompatibility
+    });
 
     if (!response.ok) {
       throw new Error(`Server responded with status: ${response.status}`);
@@ -118,10 +122,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const jsonResponse = await response.json();
 
+    if (!jsonResponse["fit-curves"] || !jsonResponse["par-tables"] || !jsonResponse["fit-results"]) {
+      throw new Error("Failed to compile the fitting function, make sure it is written in c++ syntax.");
+    }
+
     return NextResponse.json(jsonResponse, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to send request" },
+      { error: "" + error },
       { status: 500 }
     );
   }

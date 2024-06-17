@@ -88,9 +88,6 @@ const Tabs: FC<TabsProps> = ({ currentUrl }) => {
   // Fetch the fitId from the URL
   const fitId = useParams()["fit-id"];
 
-  console.log("fitId", fitId)
-  console.log(useParams())
-
   const tabs = [
     { name: "Datasets", href: `/authenticated/fit-env/${fitId}/datasets` },
     { name: "Functions", href: `/authenticated/fit-env/${fitId}/functions` },

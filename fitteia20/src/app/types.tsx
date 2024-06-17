@@ -11,6 +11,10 @@ type PropagatedDatapoint = {
   propagatedDependentVariableError: number;
 };
 
+type FittedDatapoint = {
+  independentVariable: number;
+  dependentVariable: number;
+};
 
 type AuxiliarIndependentVariable = {
   name: string;
@@ -31,6 +35,10 @@ type Function = {
   name: string;
   mainFunction: string;
   subfunctions: string[];
+  processedFunction: string | null;
+  independentVariable: string | null;
+  dependentVariable: string | null;
+  parameters: Parameter[] | null;
 };
 
 type Parameter = {
@@ -63,7 +71,25 @@ type FitRequest = {
   Ymin: string;
 };
 
+interface FitResponse {
+  "fit-curves": string[];
+  "fit-results": string;
+  "par-tables": ParameterTable[][];
+}
+
+interface ParameterTable {
+  err: string;
+  free: boolean;
+  max: string;
+  min: string;
+  name: string;
+  value: number;
+}
+
 export type {
+  ParameterTable,
+  FitResponse,
+  FittedDatapoint,
   Dataset,
   Datapoint,
   PropagatedDatapoint,

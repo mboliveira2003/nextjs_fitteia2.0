@@ -33,6 +33,11 @@ const Page: FC = (): ReactElement => {
         name: "Function " + (functions.length + 1),
         mainFunction: "y(x) = x^2",
         subfunctions: ["z(x) = x + 7"],
+        processedFunction: null,
+        independentVariable: null,
+        dependentVariable: null,
+        parameters: null,
+        
       },
     ]);
   };

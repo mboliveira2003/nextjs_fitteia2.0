@@ -72,6 +72,7 @@ const Page: FC = (): ReactElement => {
         {/*Save and move to functions button*/}
         <Link
           href="/authenticated/fit-env/new/functions"
+        
           className="flex flex-row items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:scale-[0.98] ease-in-out transition-all duration-150 bg-orange-500 gap-x-1.5 px-3 py-2 rounded-md"
         >
           Save and move to functions
