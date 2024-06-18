@@ -102,6 +102,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       FitRequest[`Pval${index}`] = parameters[index].initialValue.toString();
     });
 
+    console.log("Fetching response for:", FitRequest);
+
     const form = new FormData();
     const jsonBlob = new Blob([JSON.stringify(FitRequest)], {
       type: "application/json",

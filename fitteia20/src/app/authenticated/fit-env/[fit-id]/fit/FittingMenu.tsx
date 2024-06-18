@@ -88,7 +88,7 @@ const FittingDefinitionMenu: FC<FittingDefinitionMenuProps> = ({
         </button>
         <button
           onClick={() =>
-            updateFitResults(selectedDataset, selectedFunction, globalFit)
+            updateFitResults(selectedDataset, selectedFunction, globalFit, false)
           }
           className="flex flex-row whitespace-nowrap items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:scale-[0.98] ease-in-out transition-all duration-150 bg-orange-500 gap-x-1.5 px-3 py-2 rounded-md"
         >

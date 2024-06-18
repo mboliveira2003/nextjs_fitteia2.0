@@ -152,7 +152,7 @@ const MyChart: React.FC<MyChartProps> = ({
             if (datasetIndex === 0) {
               // Customize tooltip content for Dataset 1
               return `Error:   (${
-                data.datasets[0].data[tooltipItem.dataIndex].xError
+              data.datasets[0].data[tooltipItem.dataIndex].xError
               }, ${data.datasets[0].data[tooltipItem.dataIndex].yError})`;
             }
 
@@ -160,7 +160,7 @@ const MyChart: React.FC<MyChartProps> = ({
             return "";
           },
           title: function (tooltipItems: TooltipItem<"line">[]) {
-            return `Point:   (${tooltipItems[0].label}, ${tooltipItems[0].formattedValue})`;
+            return `Point:   (${tooltipItems[0].label.replace(",", ".")}, ${tooltipItems[0].formattedValue.replace(",", ".")})`;
           },
         },
         filter: function (tooltipItem: TooltipItem<"line">) {

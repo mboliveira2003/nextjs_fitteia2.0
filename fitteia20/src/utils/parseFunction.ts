@@ -25,6 +25,7 @@ function parseFunction(input: FunctionInput): ParsedOutput | string {
 
   // Check subfunctions
   const subCheck = checkSubfunctions(
+    mainFunction,
     subfunctions,
     independentVar,
     dependentVar
@@ -68,10 +69,12 @@ function checkMainFunction(mainFunction: string): [string, string] | string {
 }
 
 function checkSubfunctions(
+  mainFunction: string,
   subfunctions: string[],
   independentVar: string,
   dependentVar: string
 ): true | string {
+
   // Check the format of the variable names
   // Alphanumeric characters and underscores are allowed
   const subRegex = /^([a-zA-Z0-9_]+)\(([a-zA-Z0-9_]+)\)\s*=\s*.*$/;
@@ -80,7 +83,15 @@ function checkSubfunctions(
     if (!match) {
       return `The subfunction "${sub}" does not match the format z(x) = ...`;
     }
+
     const [_, subVar, subIndVar] = match;
+
+    // If the subVar is not part of the main function, we can simply ignore it
+    const regex = new RegExp(`\\b${subVar}\\b`, "g");
+    if (!regex.test(mainFunction)) {
+      return true;
+    }
+
     if (subIndVar !== independentVar) {
       return `The independent variable in subfunction "${sub}" must be the same as in the main function.`;
     }
@@ -316,6 +327,34 @@ function extractParameters(
     "utoa",
     "sprintf",
     "sscanf",
+    "fopen",
+    "fclose",
+    "fread",
+
+    // Common Math Constants
+    "Pi",
+    "pi",
+    "M_PI",
+    "M_E",
+    "M_LOG2E",
+    "M_LOG10E",
+    "M_LN2",
+    "M_LN10",
+    "M_PI_2",
+    "M_PI_4",
+    "M_1_PI",
+    "M_2_PI",
+    "M_2_SQRTPI",
+    "M_SQRT2",
+    "M_SQRT1_2",
+    "M_EULER",
+    "M_TAU",
+    "M_PHI",
+    "M_GAMMA",
+    "M_LN2",
+    "M_LN10",
+    "M_SQRT3",
+    "M_SQRT5",
   ]);
   const libFunctions = new Set([
     "BPP",

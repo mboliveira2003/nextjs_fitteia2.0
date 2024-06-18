@@ -4,17 +4,36 @@ import { PlusIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
 import React, { FC, ReactElement, useEffect, useState } from "react";
 
-import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import DatasetTable from "./DatasetTable";
 import { Dataset } from "../../../../types";
 import { getDatasets, updateDatasets } from "@/utils/storage";
+import parseCsvContent from "@/utils/parseCsv";
+import { set } from "firebase/database";
+import LoadingCircle from "@/components/visuals/loading/LoadingCircle";
+import AuthAlert from "@/components/auth/AuthAlert";
 
 const Page: FC = (): ReactElement => {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
 
+  // State to wether a dataset csv is being processed
+  const [processingCsv, setProcessingCsv] = useState<boolean>(false);
+
+  // State to store an error processing the csv
+  const [csvError, setCsvError] = useState<string | null>(null);
+
+  // After 5 seconds, remove the error message
+  useEffect(() => {
+    if (csvError) {
+      setTimeout(() => {
+        setCsvError(null);
+      }, 5000);
+    }
+  }, [csvError]);
+
   // On mount fetch the datasets
   useEffect(() => {
-    const datasets = getDatasets()
+    const datasets = getDatasets();
     if (datasets.length > 0) {
       setDatasets(datasets);
     }
@@ -41,9 +60,56 @@ const Page: FC = (): ReactElement => {
         ],
         dependentVariableName: "Y Label",
         independentVariableName: "X Label",
-        auxiliarDependentVariables: [ { name: "Auxiliar Variable", value: 0 }],
+        auxiliarDependentVariables: [{ name: "Auxiliar Variable", value: 0 }],
       },
     ]);
+  };
+
+  const addDatasetViaCsv = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setCsvError(null);
+    setProcessingCsv(true);
+
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+
+      const reader = new FileReader();
+
+      reader.onload = (event: ProgressEvent<FileReader>): void => {
+        const content = event.target?.result;
+
+        if (typeof content === "string") {
+          try {
+            const {
+              dataPoints,
+              independentVariableName,
+              dependentVariableName,
+            } = parseCsvContent(content);
+
+            setDatasets((prevDatasets: Dataset[]): Dataset[] => [
+              ...prevDatasets,
+              {
+                id: prevDatasets.length + 1,
+                name: "Dataset " + (prevDatasets.length + 1),
+                datapoints: dataPoints,
+                independentVariableName: independentVariableName || "X Label",
+                dependentVariableName: dependentVariableName || "Y Label",
+                auxiliarDependentVariables: [
+                  { name: "Auxiliar Variable", value: 0 },
+                ],
+              },
+            ]);
+          } catch (error: any) {
+            console.log(error.message)
+            setCsvError(error.message);
+            setProcessingCsv(false);
+          }
+        }
+      };
+
+      reader.readAsText(file);
+      e.target.value = "";
+      setProcessingCsv(false);
+    }
   };
 
   const removeDataset = (id: number) => {
@@ -72,7 +138,6 @@ const Page: FC = (): ReactElement => {
         {/*Save and move to functions button*/}
         <Link
           href="/authenticated/fit-env/new/functions"
-        
           className="flex flex-row items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:scale-[0.98] ease-in-out transition-all duration-150 bg-orange-500 gap-x-1.5 px-3 py-2 rounded-md"
         >
           Save and move to functions
@@ -80,7 +145,7 @@ const Page: FC = (): ReactElement => {
       </div>
 
       {/*Datasets tables*/}
-      <div className="flex flex-col w-full divide-y divide-zinc-500">
+      <div className=" flex flex-col w-full divide-y divide-zinc-500">
         {datasets.map((dataset) => (
           <DatasetTable
             key={dataset.id}
@@ -108,13 +173,48 @@ const Page: FC = (): ReactElement => {
         </p>
 
         {/*Import CSV button*/}
-        <div className="flex flex-row  items-center group rounded-md cursor-pointer border border-dashed border-zinc-500 text-sm group justify-center text-orange-500 font-semibold ease-in-out transition-all duration-300 gap-x-1.5 px-3 py-2">
+        <label
+          htmlFor="fileInput"
+          className="flex flex-row  items-center group rounded-md cursor-pointer border border-dashed border-zinc-500 text-sm group justify-center text-orange-500 font-semibold ease-in-out transition-all duration-300 gap-x-1.5 px-3 py-2"
+        >
+          <input
+            type="file"
+            id="fileInput"
+            accept=".csv,.txt"
+            className="sr-only"
+            onChange={addDatasetViaCsv}
+          />
           <div className="flex flex-row items-center gap-x-1.5 group-hover:scale-105 transition-all ease-in-out duration-150">
-            <ArrowDownTrayIcon className="h-5 w-5" />
-            Import CSV
+            {processingCsv ? (
+              <LoadingCircle className="h-5 w-5" />
+            ) : (
+              <>
+                <ArrowDownTrayIcon className="h-5 w-5" />
+                <p> Import CSV </p>
+              </>
+            )}
           </div>
-        </div>
+        </label>
       </div>
+
+
+
+
+      {/*Error message*/}
+      {csvError && (
+         <div className="animate-in zoom-in-95 fade-in w-full h-fit bg-zinc-600/20 backdrop-blur-md px-7 py-5 flex flex-row gap-x-5 items-center justify-center rounded-lg">
+         <ExclamationCircleIcon className="w-10 h-10 text-orange-500" />
+         <div className="flex flex-col items-start">
+           <p className="text-md font-medium text-zinc-300">
+             An error occurred while processing the csv!
+           </p>
+           <p className="text-base font-normal  text-zinc-500">
+             {csvError}
+           </p>
+         </div>
+       </div>
+      )}
+
     </div>
   );
 };

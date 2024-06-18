@@ -59,9 +59,7 @@ const MultipleElementSelection: FC<MultipleElementSelectionProps> = ({
             checked={selectedElementNames.length === elementNames.length}
             className="w-4 h-4 rounded-2xl text-zinc-600 bg-gray-100 border-gray-300 accent-orange-400"
             onClick={() => {
-              if (selectedElementNames.length === elementNames.length) {
-                updateselectedElementNames([]);
-              } else {
+              if (selectedElementNames.length !== elementNames.length) {
                 updateselectedElementNames(elementNames);
               }
             }}
@@ -87,7 +85,7 @@ const MultipleElementSelection: FC<MultipleElementSelectionProps> = ({
               checked={selectedElementNames.includes(elementName)}
               className="w-4 h-4 rounded-2xl text-zinc-600 bg-gray-100 border-gray-300 accent-orange-400"
               onClick={() => {
-                if (selectedElementNames.includes(elementName)) {
+                if (selectedElementNames.includes(elementName) && selectedElementNames.length > 1) {
                   updateselectedElementNames(
                     selectedElementNames.filter((name) => name !== elementName)
                   );
@@ -146,8 +144,12 @@ const SingleElementSelection: FC<SingleElementSelectionProps> = ({
           {/*Display the name of all selected datasets separated by commas*/}
           <div>
             <span>{selectedElementName}</span>
-            <span className="text-zinc-400 ml-4 text-sm">
-              {mainFunction ? mainFunction : ""}
+            <span className="text-zinc-400 ml-4 text-sm whitespace-nowrap">
+              {mainFunction
+                ? mainFunction.length > 25
+                  ? mainFunction.slice(0, 25) + "..."
+                  : mainFunction
+                : ""}
             </span>
           </div>
           <ChevronUpDownIcon className="h-5 w-5" />
@@ -164,8 +166,12 @@ const SingleElementSelection: FC<SingleElementSelectionProps> = ({
                 value={elementName}
               >
                 <span>{elementName}</span>
-                <span className="text-zinc-400 ml-4 text-sm">
-                  {mainFunctionNames[index] ? mainFunctionNames[index] : ""}
+                <span className="text-zinc-400 ml-4 text-sm whitespace-nowrap">
+                  {mainFunctionNames[index]
+                    ? mainFunctionNames[index].length > 25
+                      ? mainFunctionNames[index].slice(0, 25) + "..."
+                      : mainFunctionNames[index]
+                    : ""}
                 </span>
               </Listbox.Option>
 
