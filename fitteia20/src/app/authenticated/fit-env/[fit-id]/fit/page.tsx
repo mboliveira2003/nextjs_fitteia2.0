@@ -14,8 +14,8 @@ const Page: FC = (): ReactElement => {
   const fitType = getFitType();
 
   // State to store the selected dataset, function and fit type
-  const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(
-    datasets.length === 0 ? null : datasets[0]
+  const [selectedDatasets, setSelectedDatasets] = useState<Dataset[] | null>(
+    datasets.length === 0 ? null : [datasets[0]]
   );
   const [selectedFunction, setSelectedFunction] = useState<Function | null>(
     functions.length === 0 ? null : functions[0]
@@ -23,14 +23,14 @@ const Page: FC = (): ReactElement => {
   const [globalFit, setGlobalFit] = useState<boolean>(fitType);
 
   // Function to update the selected datasets by name
-  const updateSelectedDataset = (datasetName: string) => {
-    const foundDataset = datasets.find((dataset) =>
-      datasetName.includes(dataset.name)
+  const updateSelectedDatasets = (datasetNames: string[]) => {
+    const foundDatasets = datasets.filter((dataset) =>
+      datasetNames.some((name) => name.includes(dataset.name))
     );
-    if (foundDataset) {
-      setSelectedDataset(foundDataset);
-    }
+    setSelectedDatasets(foundDatasets);
   };
+
+  console.log("Selected Datasets:", selectedDatasets);
 
   // Function to update the selected function by name
   const updateSelectedFunction = (functionName: string) => {
@@ -42,18 +42,18 @@ const Page: FC = (): ReactElement => {
     }
   };
 
-  if (!selectedFunction || !selectedDataset) {
+  if (!selectedFunction || !selectedDatasets || selectedDatasets.length === 0) {
     return (
       <div className="w-fit h-fit bg-white/[0.025] backdrop-blur-md ring-1 ring-white/[0.075] ring-inset px-7 py-5 flex flex-row gap-x-5 items-center rounded-lg">
         <ExclamationCircleIcon className="w-10 h-10 text-orange-500" />
         <div className="flex flex-col items-start">
-        <p className="text-md font-medium text-zinc-300">
-          You must specify at least a dataset and function to use the fitting
-          environment!
-        </p>
-        <p className="text-base text-zinc-500">
-          Please go back and add the missing objects.
-        </p>
+          <p className="text-md font-medium text-zinc-300">
+            You must specify at least a dataset and function to use the fitting
+            environment!
+          </p>
+          <p className="text-base text-zinc-500">
+            Please go back and add the missing objects.
+          </p>
         </div>
       </div>
     );
@@ -62,9 +62,9 @@ const Page: FC = (): ReactElement => {
   return (
     <div className="w-full h-fit min-h-screen bg-white/[0.025] backdrop-blur-md ring-1 ring-white/[0.075] ring-inset px-10 py-5 gap-y-8 flex flex-col rounded-lg">
       <FittingMenu
-        selectedDataset={selectedDataset}
+        selectedDatasets={selectedDatasets}
         selectedFunction={selectedFunction}
-        updateSelectedDataset={updateSelectedDataset}
+        updateSelectedDatasets={updateSelectedDatasets}
         updateSelectedFunction={updateSelectedFunction}
         globalFit={globalFit}
         setGlobalFit={setGlobalFit}

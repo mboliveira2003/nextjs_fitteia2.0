@@ -6,13 +6,13 @@ import { getDatasets, getFunctions } from "@/utils/storage";
 
 interface MultipleElementSelectionProps {
   selectedElementNames: string[];
-  updateselectedElementNames: (selectedElementNames: string[]) => void;
+  updateSelectedElementNames: (selectedElementNames: string[]) => void;
   elementType: "function" | "dataset";
 }
 
 const MultipleElementSelection: FC<MultipleElementSelectionProps> = ({
   selectedElementNames,
-  updateselectedElementNames,
+  updateSelectedElementNames,
   elementType,
 }): ReactElement => {
   // State to store the element names
@@ -58,9 +58,9 @@ const MultipleElementSelection: FC<MultipleElementSelectionProps> = ({
             type="checkbox"
             checked={selectedElementNames.length === elementNames.length}
             className="w-4 h-4 rounded-2xl text-zinc-600 bg-gray-100 border-gray-300 accent-orange-400"
-            onClick={() => {
+            onChange={() => {
               if (selectedElementNames.length !== elementNames.length) {
-                updateselectedElementNames(elementNames);
+                updateSelectedElementNames(elementNames);
               }
             }}
           />
@@ -84,13 +84,13 @@ const MultipleElementSelection: FC<MultipleElementSelectionProps> = ({
               type="checkbox"
               checked={selectedElementNames.includes(elementName)}
               className="w-4 h-4 rounded-2xl text-zinc-600 bg-gray-100 border-gray-300 accent-orange-400"
-              onClick={() => {
+              onChange={() => {
                 if (selectedElementNames.includes(elementName) && selectedElementNames.length > 1) {
-                  updateselectedElementNames(
+                  updateSelectedElementNames(
                     selectedElementNames.filter((name) => name !== elementName)
                   );
                 } else {
-                  updateselectedElementNames([
+                  updateSelectedElementNames([
                     ...selectedElementNames,
                     elementName,
                   ]);
@@ -179,7 +179,7 @@ const SingleElementSelection: FC<SingleElementSelectionProps> = ({
                 type="checkbox"
                 checked={selectedElementName === elementName}
                 className="w-4 h-4 rounded-2xl text-zinc-600 bg-gray-100 border-gray-300 accent-orange-400"
-                onClick={() => {
+                onChange={() => {
                   if (selectedElementName !== elementName) {
                     updateSelectedElementName(elementName);
                   } else {

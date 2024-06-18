@@ -2,7 +2,10 @@ import React, { FC, ReactElement, useEffect, useState } from "react";
 
 import LabeledSwitch from "@/components/common/forms/LabeledSwitch";
 import Input from "@/components/common/forms/input";
-import { SingleElementSelection } from "@/components/common/forms/ElementSelection";
+import {
+  MultipleElementSelection,
+  SingleElementSelection,
+} from "@/components/common/forms/ElementSelection";
 import {
   Dataset,
   FitResponse,
@@ -26,7 +29,6 @@ import {
 } from "@/utils/storage";
 import extractXYPairs from "@/utils/extractFittedPoints";
 import extractChiSquared from "@/utils/extractChiSquared";
-import { set } from "firebase/database";
 
 interface FittingDefinitionMenuProps {
   parameters: Parameter[];
@@ -35,14 +37,14 @@ interface FittingDefinitionMenuProps {
   updateFixed: (index: number, value: boolean) => void;
   updateInitialValue: (index: number, value: number) => void;
   selectedFunction: Function;
-  selectedDataset: Dataset;
+  selectedDatasets: Dataset[];
   updateSelectedFunction: (functionName: string) => void;
-  updateSelectedDataset: (datasetName: string) => void;
+  updateSelectedDatasets: (datasetNames: string[]) => void;
   globalFit: boolean;
   setGlobalFit: (value: boolean) => void;
   errorParsingParameters?: string | null;
   updateFitResults: (
-    selectedDataset: Dataset,
+    selectedDatasets: Dataset[],
     selectedFunction: Function,
     isFitGlobal: boolean,
     datasetOnly?: boolean
@@ -56,9 +58,9 @@ const FittingDefinitionMenu: FC<FittingDefinitionMenuProps> = ({
   updateFixed,
   updateInitialValue,
   selectedFunction,
-  selectedDataset,
+  selectedDatasets,
   updateSelectedFunction,
-  updateSelectedDataset,
+  updateSelectedDatasets,
   globalFit,
   setGlobalFit,
   errorParsingParameters,
@@ -80,19 +82,29 @@ const FittingDefinitionMenu: FC<FittingDefinitionMenuProps> = ({
         {/*Fit button*/}
         <button
           onClick={() =>
-            updateFitResults(selectedDataset, selectedFunction, globalFit, true)
+            updateFitResults(
+              selectedDatasets,
+              selectedFunction,
+              globalFit,
+              true
+            )
           }
           className="flex flex-row whitespace-nowrap items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-zinc-700/10 font-semibold hover:scale-[0.98] ease-in-out transition-all duration-150 bg-zinc-700 gap-x-1.5 px-3 py-2 rounded-md"
         >
-          Plot dataset
+          {selectedDatasets.length > 1 ? "Plot datasets" : "Plot dataset"}
         </button>
         <button
           onClick={() =>
-            updateFitResults(selectedDataset, selectedFunction, globalFit, false)
+            updateFitResults(
+              selectedDatasets,
+              selectedFunction,
+              globalFit,
+              false
+            )
           }
           className="flex flex-row whitespace-nowrap items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:scale-[0.98] ease-in-out transition-all duration-150 bg-orange-500 gap-x-1.5 px-3 py-2 rounded-md"
         >
-          Fit dataset
+          {selectedDatasets.length > 1 ? "Fit datasets" : "Fit dataset"}
         </button>
       </div>
 
@@ -121,9 +133,11 @@ const FittingDefinitionMenu: FC<FittingDefinitionMenuProps> = ({
             Choose a Dataset
           </label>
 
-          <SingleElementSelection
-            selectedElementName={selectedDataset.name}
-            updateSelectedElementName={updateSelectedDataset}
+          <MultipleElementSelection
+            selectedElementNames={selectedDatasets.map(
+              (dataset) => dataset.name
+            )}
+            updateSelectedElementNames={updateSelectedDatasets}
             elementType="dataset"
           />
         </div>
@@ -140,6 +154,7 @@ const FittingDefinitionMenu: FC<FittingDefinitionMenuProps> = ({
             disabledLabel="Individual"
             enabled={globalFit}
             setEnabled={setGlobalFit}
+            defaultSwitchToDisabled={selectedDatasets.length === 1}
           />
         </div>
       </div>
@@ -269,78 +284,39 @@ const FittingDefinitionMenu: FC<FittingDefinitionMenuProps> = ({
 interface FittingResultsMenuProps {
   fitResults: FitResponse | null;
   errorFetchingFitResults: string | null;
-  selectedDataset: Dataset;
-  selectedFunction: Function;
+  fittedDatasets: Dataset[];
+  fittedFunction: Function | null;
   loadingFitResults: boolean;
 }
 
 const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
   fitResults,
   errorFetchingFitResults,
-  selectedDataset,
-  selectedFunction,
+  fittedDatasets,
+  fittedFunction,
   loadingFitResults,
 }): ReactElement => {
-  // States to store the data from the fit results
-  const [parameterTables, setParameterTables] = useState<ParameterTable[]>([]);
-  const [chi2, setChi2] = useState<number | string>("-");
-  const [reducedChi2, setReducedChi2] = useState<number | string>("-");
-  const [fittedPoints, setFittedPoints] = useState<FittedDatapoint[]>([]);
 
-  // Keeps track of wether to display only the dataset or the fit results
-  const [datasetOnly, setDatasetOnly] = useState<boolean>(false);
+  const isFitGlobal = fitResults ? fitResults.FitType === "Global" : false;
+  
+  const parameterTables: ParameterTable[][] = fitResults ? fitResults["par-tables"] : [];
 
-  // When fitResults changes update all data
-  useEffect(() => {
-    setDatasetOnly(false);
+  const chi2Array = fitResults ?  extractChiSquared(fitResults["fit-results"]) : [];
 
-    if (
-      !fitResults ||
-      !fitResults["par-tables"] ||
-      !fitResults["fit-results"] ||
-      !fitResults["fit-curves"]
-    ) {
-      console.log("Returned");
-      return;
-    }
+  const reducedChi2Array = chi2Array.length > 0 ? chi2Array.map(
+    (chi2, index) =>
+      chi2 /
+      (fittedDatasets[index].datapoints.length -
+        parameterTables[isFitGlobal ? 0 : index].filter((param) => param.free).length)
+  ) : [];
 
-    if (fitResults["fit-curves"][0] === "dataset-only") {
-      setFittedPoints([]);
-      setParameterTables([]);
-      setChi2("-");
-      setReducedChi2("-");
-      setDatasetOnly(true);
-      console.log("Dataset only", datasetOnly);
-      return;
-    }
+  const fittedPointsArray = fitResults ? fitResults["fit-curves"].map((curveString) =>
+    curveString ? extractXYPairs(curveString) : []
+  ) : [];
 
-    // Retrive the parameters from the fit results
-    const parameterTables = fitResults["par-tables"][0];
-    setParameterTables(parameterTables);
+  const datasetOnly = fitResults ? fitResults["fit-curves"][0] === "dataset-only" : false;
 
-    // Retrieve the statistics from the fit results
-    const chi2 = extractChiSquared(fitResults["fit-results"]);
-    setChi2(chi2);
-
-    // Calculate the number of datapoints
-    const numberOfPoints = selectedDataset.datapoints.length;
-
-    // Calculate the number of free parameters
-    const numberOfFreeParameters = parameterTables.filter(
-      (param) => param.free
-    ).length;
-
-    // Calculate the reduced chi squared
-    const reducedChi2 =
-      typeof chi2 === "number"
-        ? chi2 / (numberOfPoints - numberOfFreeParameters)
-        : "-";
-    setReducedChi2(reducedChi2);
-
-    // Fetch the fitted points from the fit results
-    const fittedPoints = extractXYPairs(fitResults["fit-curves"][0]);
-    setFittedPoints(fittedPoints);
-  }, [fitResults]);
+  
 
   if (loadingFitResults) {
     return (
@@ -348,8 +324,7 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
         <div className="flex flex-col items-start w-full">
           <h1 className="text-white font-semibold text-lg">Results</h1>
           <p className="text-zinc-500 text-base font-normal">
-            Showing results for {selectedFunction.name} and{" "}
-            {selectedDataset.name}
+            View your plotted datasets and fitted functions
           </p>
         </div>
         <div className="w-full h-fit bg-zinc-600/20 backdrop-blur-md px-7 py-5 flex flex-row gap-x-5 items-center justify-center rounded-lg animate-pulse duration-1000 transition-opacity">
@@ -367,39 +342,13 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
     );
   }
 
-  if (datasetOnly) {
-    return (
-      <div className="w-full flex flex-col gap-y-8 pt-10">
-        <div className="flex flex-col items-start w-full">
-          <h1 className="text-white font-semibold text-lg">Results</h1>
-          <p className="text-zinc-500 text-base font-normal">
-            Showing plot of {selectedDataset.name}
-          </p>
-        </div>
-
-        <div className="w-full px-14">
-          <MyChart
-            dataPoints={selectedDataset.datapoints}
-            fittedPoints={fittedPoints}
-            datasetName={selectedDataset.name}
-            functionName={selectedFunction.name}
-            independentVariableName={selectedDataset.independentVariableName}
-            dependentVariableName={selectedDataset.dependentVariableName}
-            datasetOnly={true}
-          />
-        </div>
-      </div>
-    );
-  }
-
   if (errorFetchingFitResults) {
     return (
       <div className="w-full flex flex-col gap-y-8 pt-10">
         <div className="flex flex-col items-start w-full">
           <h1 className="text-white font-semibold text-lg">Results</h1>
           <p className="text-zinc-500 text-base font-normal">
-            Showing results for {selectedFunction.name} and{" "}
-            {selectedDataset.name}
+            View your plotted datasets and fitted functions
           </p>
         </div>
         <div className="w-full h-fit bg-zinc-600/20 backdrop-blur-md px-7 py-5 flex flex-row gap-x-5 items-center justify-center rounded-lg">
@@ -417,14 +366,50 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
     );
   }
 
-  if (!fitResults) {
+  if (datasetOnly) {
     return (
       <div className="w-full flex flex-col gap-y-8 pt-10">
         <div className="flex flex-col items-start w-full">
           <h1 className="text-white font-semibold text-lg">Results</h1>
           <p className="text-zinc-500 text-base font-normal">
-            Showing results for {selectedFunction.name} and{" "}
-            {selectedDataset.name}
+            Showing plot of {fittedDatasets[0].name}{" "}
+            {fittedDatasets.length > 1 &&
+              "to " + fittedDatasets[fittedDatasets.length - 1].name}
+          </p>
+        </div>
+
+        {fittedDatasets.map((dataset, index) => (
+          <div className="w-full px-14" key={index}>
+            <MyChart
+              dataPoints={fittedDatasets[index].datapoints}
+              // Need to update to select the correct fitted points
+              fittedPoints={[]}
+              datasetName={dataset.name}
+              functionName={""}
+              independentVariableName={dataset.independentVariableName}
+              dependentVariableName={dataset.dependentVariableName}
+              datasetOnly={true}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!fitResults ||
+    parameterTables.length === 0 ||
+    chi2Array.length === 0 ||
+    reducedChi2Array.length === 0 ||
+    fittedPointsArray.length === 0 ||
+    fittedDatasets.length === 0 ||
+    !fittedFunction
+  ) {
+    return (
+      <div className="w-full flex flex-col gap-y-8 pt-10">
+        <div className="flex flex-col items-start w-full">
+          <h1 className="text-white font-semibold text-lg">Results</h1>
+          <p className="text-zinc-500 text-base font-normal">
+            View your plotted datasets and fitted functions
           </p>
         </div>
         <div className="w-full h-fit bg-zinc-600/20 backdrop-blur-md px-7 py-5 flex flex-row gap-x-5 items-center justify-center rounded-lg">
@@ -447,144 +432,153 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
       <div className="flex flex-col items-start w-full">
         <h1 className="text-white font-semibold text-lg">Results</h1>
         <p className="text-zinc-500 text-base font-normal">
-          Showing results for {selectedFunction.name} and {selectedDataset.name}
+          Showing results for {fittedFunction.name} and {fittedDatasets[0].name}{" "}
+          {fittedDatasets.length > 1 &&
+            "to " + fittedDatasets[fittedDatasets.length - 1].name}
         </p>
       </div>
 
-      <div className="w-full px-14">
-        <MyChart
-          dataPoints={selectedDataset.datapoints}
-          fittedPoints={fittedPoints}
-          datasetName={selectedDataset.name}
-          functionName={selectedFunction.name}
-          independentVariableName={selectedDataset.independentVariableName}
-          dependentVariableName={selectedDataset.dependentVariableName}
-        />
-      </div>
+      {fittedDatasets.map((dataset, index) => (
+        <div className="w-full h-full" key={index}>
+          <div className="w-full px-14">
+            <MyChart
+              dataPoints={dataset.datapoints}
+              // Need to update to select the correct fitted points
+              fittedPoints={fittedPointsArray[index] || []}
+              datasetName={dataset.name}
+              functionName={fittedFunction.name}
+              independentVariableName={dataset.independentVariableName}
+              dependentVariableName={dataset.dependentVariableName}
+            />
+          </div>
 
-      <div className="flex flex-row-reverse items-start gap-x-20">
-        {/*Parameters Table*/}
-        <div className="relative w-full">
-          <table className="w-full text-sm text-left rtl:text-right divide-y rounded-md overflow-hidden divide-zinc-500">
-            <thead className="bg-zinc-600/20">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-10 py-3 font-semibold text-sm text-white"
-                >
-                  Parameter
-                </th>
-                <th
-                  scope="col"
-                  className="px-10 py-3 font-semibold text-sm text-white"
-                >
-                  Value
-                </th>
-                <th
-                  scope="col"
-                  className="px-10 py-3 font-semibold text-sm text-white"
-                >
-                  Error
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-500">
-              {parameterTables.map((parameter, index) => (
-                <tr key={index} className="">
-                  <th
-                    scope="row"
-                    className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
-                  >
-                    {parameter.name}
-                  </th>
-                  <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                    {parameter.value}
-                  </td>
-                  <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                    {parameter.err}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          <div className="flex flex-row-reverse items-start gap-x-20">
+            {/*Parameters Table*/}
+            <div className="relative w-full">
+              <table className="w-full text-sm text-left rtl:text-right divide-y rounded-md overflow-hidden divide-zinc-500">
+                <thead className="bg-zinc-600/20">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-10 py-3 font-semibold text-sm text-white"
+                    >
+                      Parameter
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-10 py-3 font-semibold text-sm text-white"
+                    >
+                      Value
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-10 py-3 font-semibold text-sm text-white"
+                    >
+                      Error
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-500">
+                  {parameterTables[isFitGlobal ? 0 : index]?.map((parameter, paramIndex) => (
+                    <tr key={paramIndex} className="">
+                      <th
+                        scope="row"
+                        className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
+                      >
+                        {parameter.name}
+                      </th>
+                      <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
+                        {parameter.value}
+                      </td>
+                      <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
+                        {parameter.err}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-        {/*Statistics Table*/}
-        <div className="relative w-fit">
-          <table className="w-full text-sm text-left rtl:text-right divide-y divide-zinc-500 rounded-md overflow-hidden">
-            <thead className="bg-zinc-600/20">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-10 py-3 font-semibold text-sm text-white"
-                >
-                  Statistic
-                </th>
-                <th
-                  scope="col"
-                  className="px-10 py-3 font-semibold text-sm text-white"
-                >
-                  Value
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-500">
-              <tr key="Chi2" className="">
-                <th
-                  scope="row"
-                  className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
-                >
-                  Chi Squared
-                </th>
-                <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                  {chi2}
-                </td>
-              </tr>
-              <tr key="Reduced Chi2" className="">
-                <th
-                  scope="row"
-                  className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
-                >
-                  Reduced Chi Squared
-                </th>
-                <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                  {reducedChi2}
-                </td>
-              </tr>
-              <tr key="points" className="">
-                <th
-                  scope="row"
-                  className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
-                >
-                  Points
-                </th>
-                <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                  {selectedDataset.datapoints.length}
-                </td>
-              </tr>
-              <tr key="freeParameters" className="">
-                <th
-                  scope="row"
-                  className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
-                >
-                  Free Parameters
-                </th>
-                <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                  {parameterTables.filter((param) => param.free).length}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+            {/*Statistics Table*/}
+            <div className="relative w-fit">
+              <table className="w-full text-sm text-left rtl:text-right divide-y divide-zinc-500 rounded-md overflow-hidden">
+                <thead className="bg-zinc-600/20">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-10 py-3 font-semibold text-sm text-white"
+                    >
+                      Statistic
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-10 py-3 font-semibold text-sm text-white"
+                    >
+                      Value
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-500">
+                  <tr key="Chi2" className="">
+                    <th
+                      scope="row"
+                      className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
+                    >
+                      Chi Squared
+                    </th>
+                    <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
+                      {chi2Array[index]}
+                    </td>
+                  </tr>
+                  <tr key="Reduced Chi2" className="">
+                    <th
+                      scope="row"
+                      className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
+                    >
+                      Reduced Chi Squared
+                    </th>
+                    <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
+                      {reducedChi2Array[index]}
+                    </td>
+                  </tr>
+                  <tr key="points" className="">
+                    <th
+                      scope="row"
+                      className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
+                    >
+                      Points
+                    </th>
+                    <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
+                      {fittedDatasets[index].datapoints.length}
+                    </td>
+                  </tr>
+                  <tr key="freeParameters" className="">
+                    <th
+                      scope="row"
+                      className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
+                    >
+                      Free Parameters
+                    </th>
+                    <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
+                      {
+                        parameterTables[isFitGlobal ? 0 :index].filter((param) => param.free).length
+                      }
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 };
 
 interface FittingMenuProps {
   selectedFunction: Function;
-  selectedDataset: Dataset;
-  updateSelectedDataset: (datasetName: string) => void;
+  selectedDatasets: Dataset[];
+  updateSelectedDatasets: (datasetNames: string[]) => void;
   updateSelectedFunction: (functionName: string) => void;
   globalFit: boolean;
   setGlobalFit: (value: boolean) => void;
@@ -592,8 +586,8 @@ interface FittingMenuProps {
 
 const FittingMenu: FC<FittingMenuProps> = ({
   selectedFunction,
-  selectedDataset,
-  updateSelectedDataset,
+  selectedDatasets,
+  updateSelectedDatasets,
   updateSelectedFunction,
   globalFit,
   setGlobalFit,
@@ -617,9 +611,17 @@ const FittingMenu: FC<FittingMenuProps> = ({
   // State to store the loading state of the fit results
   const [loadingFitResults, setLoadingFitResults] = useState<boolean>(false);
 
+  // State to store the previously fitted datasets
+  const [previousDatasets, setPreviousDatasets] = useState<Dataset[]>([]);
+
+  // State to store the previously fitted function
+  const [previousFunction, setPreviousFunction] = useState<Function | null>(
+    null
+  );
+
   // Function to update the fit resuls
   async function updateFitResults(
-    selectedDataset: Dataset,
+    selectedDatasets: Dataset[],
     selectedFunction: Function,
     isFitGlobal: boolean,
     datasetOnly?: boolean
@@ -627,15 +629,17 @@ const FittingMenu: FC<FittingMenuProps> = ({
     setErrorFetchingFitResults(null);
     setLoadingFitResults(true);
 
+    // Store the datasets and the function used for this fit
+    setPreviousDatasets(selectedDatasets);
+    setPreviousFunction(selectedFunction);
+
     if (datasetOnly) {
-      console.log("Dataset only", datasetOnly);
       setFitResults({
         "fit-curves": ["dataset-only"],
         "fit-results": "dataset-only",
-        "par-tables": [[]],
+        "par-tables": [],
       } as FitResponse);
       setLoadingFitResults(false);
-      console.log(fitResults);
       return;
     }
 
@@ -645,7 +649,7 @@ const FittingMenu: FC<FittingMenuProps> = ({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        selectedDataset,
+        selectedDatasets,
         selectedFunction,
         isFitGlobal,
       }),
@@ -659,6 +663,7 @@ const FittingMenu: FC<FittingMenuProps> = ({
     }
 
     const data = await response.json();
+    console.log("Data:", data)
     setFitResults(data);
     setLoadingFitResults(false);
   }
@@ -771,9 +776,9 @@ const FittingMenu: FC<FittingMenuProps> = ({
         updateFixed={updateFixed}
         updateInitialValue={updateInitialValue}
         selectedFunction={selectedFunction}
-        selectedDataset={selectedDataset}
+        selectedDatasets={selectedDatasets}
         updateSelectedFunction={updateSelectedFunction}
-        updateSelectedDataset={updateSelectedDataset}
+        updateSelectedDatasets={updateSelectedDatasets}
         globalFit={globalFit}
         setGlobalFit={setGlobalFit}
         errorParsingParameters={errorParsingParameters}
@@ -783,8 +788,8 @@ const FittingMenu: FC<FittingMenuProps> = ({
         <FittingResultsMenu
           fitResults={fitResults}
           errorFetchingFitResults={errorFetchingFitResults}
-          selectedDataset={selectedDataset}
-          selectedFunction={selectedFunction}
+          fittedDatasets={previousDatasets}
+          fittedFunction={previousFunction}
           loadingFitResults={loadingFitResults}
         />
       )}

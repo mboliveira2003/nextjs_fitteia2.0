@@ -1,15 +1,22 @@
-function extractChiSquared(fitResults: string): number | string {
-  // Regular expression to match the line containing chi-squared value
-  const chiSquaredRegex = /^tags\.txt, \d+, (\d+)/m;
-  const match = fitResults.match(chiSquaredRegex);
+function extractChiSquared(fitResults: string): number[] {
 
-  if (match && match[1]) {
-    // Convert the matched chi-squared value to a number and return
-    return parseFloat(match[1]);
-  } else {
-    console.log("Chi-squared value not found in fit results");
-    return "-";
+  // Split the fitResults string into lines
+  const lines = fitResults.trim().split('\n');
+  
+  // Ignore the header and process each line
+  const chi2Values = lines.slice(1).map(line => {
+    const columns = line.split(',').map(column => column.trim());
+
+    // Extract the third column, wich has the chi-squared value
+    return parseFloat(columns[2]); 
+  });
+
+  // If any of the values of the chi squared is NaN, return an empty array
+  if (chi2Values.some(value => isNaN(value))) {
+    console.log('Error extracting chi-squared values')
+    return [];
   }
+  return chi2Values;
 }
 
 export default extractChiSquared;

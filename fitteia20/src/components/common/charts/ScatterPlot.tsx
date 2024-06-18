@@ -70,6 +70,10 @@ const MyChart: React.FC<MyChartProps> = ({
   dependentVariableName,
   datasetOnly = false,
 }) => {
+
+  console.log("Fitted Points Scatter Plot:", fittedPoints)
+  console.log("Dataset Only Scatter Plot:", datasetOnly)
+
   const datasets: ChartDataset<"line", DataPointWithError[]>[] = [];
 
   datasets.push({

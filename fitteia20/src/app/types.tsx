@@ -75,6 +75,7 @@ interface FitResponse {
   "fit-curves": string[];
   "fit-results": string;
   "par-tables": ParameterTable[][];
+  FitType?: "Global" | "Individual";
 }
 
 interface ParameterTable {

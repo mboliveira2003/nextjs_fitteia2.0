@@ -1,11 +1,12 @@
-'use client'
+"use client";
 
-import { FC, ReactElement } from "react";
+import { FC, ReactElement, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import NavBar from "@/components/common/NavBar";
 import TopographyPattern from "@/components/visuals/backgrounds/TopographyPattern";
 import { auth } from "@/firebase";
+import LoadingCircle from "@/components/visuals/loading/LoadingCircle";
 
 interface AuthenticatedProps {
   children: ReactElement;
@@ -18,10 +19,23 @@ const Authenticated: FC<AuthenticatedProps> = ({ children }) => {
   // Get the current user
   const user = auth.currentUser;
 
-  // If the user is not logged in, redirect to the login page
+  useEffect(() => {
+    // If the user is not logged in, redirect to the login page
+    if (!user) {
+      router.push("/login");
+    }
+  }, [user, router]);
+
+  // If the user is not logged in, show a loading screen
   if (!user) {
-    router.push("/login");
-    return;
+    return (
+      <div className="flex min-h-screen flex-1 flex-col md:flex-row ">
+        <div className="fixed inset-0 w-full h-full -z-10 flex items-center justify-center">
+          <LoadingCircle />
+        </div>
+        <TopographyPattern />
+      </div>
+    );
   }
 
   return (
