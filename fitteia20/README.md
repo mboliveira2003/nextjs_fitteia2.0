@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Certainly! Here’s the complete `README.md` file for your Next.js project. Copy and paste this into your `README.md` file in your GitHub repository:
 
-## Getting Started
+```markdown
+# Next.js Fitteia 2.0
 
-First, run the development server:
+Welcome to the Next.js Fitteia 2.0 project! This README will guide you through the steps to run the project locally on your machine.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Table of Contents
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Running the Project](#running-the-project)
+- [Project Structure](#project-structure)
+- [Available Scripts](#available-scripts)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+
+- [Node.js](https://nodejs.org/) (version 14.x or later)
+- [npm](https://www.npmjs.com/) (usually comes with Node.js)
+- [Git](https://git-scm.com/)
+
+## Installation
+
+1. **Clone the Repository:**
+
+   Clone the repository to your local machine using the following command:
+
+   ```bash
+   git clone https://github.com/mboliveira2003/nextjs_fitteia2.0.git
+   ```
+
+2. **Navigate to the Project Directory:**
+
+   Change to the project directory:
+
+   ```bash
+   cd nextjs_fitteia2.0
+   cd fitteia20
+   ```
+
+3. **Install Dependencies:**
+
+   Install the required dependencies using npm:
+
+   ```bash
+   npm install
+   ```
+
+   Alternatively, if you prefer using [Yarn](https://yarnpkg.com/), you can install dependencies with:
+
+   ```bash
+   yarn install
+   ```
+
+## Running the Project
+
+1. **Start the Development Server:**
+
+   Start the local development server by running:
+
+   ```bash
+   npm run dev
+   ```
+
+   or if using Yarn:
+
+   ```bash
+   yarn dev
+   ```
+
+2. **Access the Application:**
+
+   Open your browser and navigate to [http://localhost:3000](http://localhost:3000) to view the application.
+
+## Project Structure
+
+A quick overview of the project structure:
+
+```
+fitteia20/
+├── components/       # Reusable components
+├── pages/            # Pages of the application
+│   └── api/          # API routes
+├── public/           # Static files
+├── styles/           # Global and component-specific styles
+├── .gitignore        # Files to ignore in version control
+├── package.json      # Project metadata and scripts
+├── README.md         # Project documentation
+└── next.config.js    # Next.js configuration
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Available Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+In the project directory, you can run the following scripts:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- `npm run dev` - Runs the app in development mode.
+- `npm run build` - Builds the app for production.
+- `npm run start` - Starts the production server.
+- `npm run lint` - Lints the project for potential issues.
 
-## Learn More
+## Contributing
 
-To learn more about Next.js, take a look at the following resources:
+We welcome contributions to this project! To contribute:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Fork the repository.
+2. Create a new branch with your feature or bug fix.
+3. Commit your changes and push the branch to your fork.
+4. Open a Pull Request to the main repository.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Please ensure that your code follows the project's style guidelines and includes relevant tests.
