@@ -10,7 +10,6 @@ Welcome to the Next.js Fitteia 2.0 project! This README will guide you through t
 - [Project Structure](#project-structure)
 - [Available Scripts](#available-scripts)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## Prerequisites
 
