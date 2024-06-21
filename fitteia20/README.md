@@ -1,11 +1,9 @@
-Certainly! Here’s the complete `README.md` file for your Next.js project. Copy and paste this into your `README.md` file in your GitHub repository:
-
-```markdown
 # Next.js Fitteia 2.0
 
 Welcome to the Next.js Fitteia 2.0 project! This README will guide you through the steps to run the project locally on your machine.
 
 ## Table of Contents
+
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Running the Project](#running-the-project)
