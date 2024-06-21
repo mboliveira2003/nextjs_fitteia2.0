@@ -723,7 +723,7 @@ const FittingMenu: FC<FittingMenuProps> = ({
         Min: -1000,
         Max: 1000,
         fixed: false,
-        initialValue: 0,
+        initialValue: 1,
         error: 0,
       })
     );

@@ -75,7 +75,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     form.append("username", "mboliveira");
     form.append("file", jsonBlob, "data.json");
 
-    const response = await fetch("http://localhost:8142/fit", {
+    const response = await fetch("http://onefite-t.vps.tecnico.ulisboa.pt:8142/fit", {
       method: "POST",
       body: form as any,
     });
