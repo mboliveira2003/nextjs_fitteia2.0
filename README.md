@@ -36,7 +36,6 @@ Before you begin, ensure you have the following installed on your system:
 
    ```bash
    cd nextjs_fitteia2.0
-   cd fitteia20
    ```
 
 3. **Install Dependencies:**
@@ -78,7 +77,7 @@ Before you begin, ensure you have the following installed on your system:
 A quick overview of the project structure:
 
 ```
-fitteia20/
+nextjs_fitteia2.0/
 ├── components/       # Reusable components
 ├── pages/            # Pages of the application
 │   └── api/          # API routes
