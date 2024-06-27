@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { ChevronDownIcon} from "@heroicons/react/20/solid";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React, { FC, useState } from "react";
 
@@ -114,8 +115,9 @@ const DatasetTableHeader: FC<DatasetTableHeaderProps> = ({
           scope="col"
           className="px-3 py-3.5 text-left text-sm font-semibold "
         >
-          <div className="block w-full rounded-md  border-0 bg-transparent text-zinc-200 transition-all duration-200 placeholder:text-zinc-400 focus:ring-inset focus:ring-zinc-600 sm:text-sm sm:leading-6">
+          <div className=" w-full flex flex-row items-center gap-x-2 rounded-md  border-0 bg-transparent text-zinc-200 transition-all duration-200 placeholder:text-zinc-400 focus:ring-inset focus:ring-zinc-600 sm:text-sm sm:leading-6">
             {variableNames.independentVariableName + " Error"}
+            <ExclamationTriangleIcon title="Errors in the independent variable are propagated to the errors of the dependent variable via numerical derivatives. Make sure this numerical derivative makes sense in the context of your dataset. If your dataset has less than 4 datapoints or exhibits discontinuities, the numerical derivative may not allow for an accurate propagation of errors." className="h-4 w-4 text-orange-400 cursor-pointer mt-1 transition-all ease-out duration-200" />
           </div>
         </th>
 
@@ -289,7 +291,10 @@ const DatasetTableBody: FC<DatasetTableBodyProps> = ({
           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
             <XMarkIcon
               onClick={() => removePointByIndex(index)}
-              className="h-5 w-5 text-zinc-500 hover:text-zinc-400 transition-all ease-in-out duration-300 cursor-pointer"
+              className={clsx(
+                datapoints.length > 1 && "hover:text-zinc-400 cursor-pointer",
+                "h-5 w-5 text-zinc-500 transition-all ease-in-out duration-200"
+              )}
             />
           </td>
         </tr>
@@ -314,10 +319,10 @@ const AddDatapoingButton: FC<AddDatapointButtonProps> = ({
           updateDatapoints([
             ...datapoints,
             {
-              independentVariable: 0,
+              independentVariable: 1,
               independentVariableError: 0,
-              dependentVariable: 0,
-              dependentVariableError: 0,
+              dependentVariable: 1,
+              dependentVariableError: 0.1,
             },
           ] as Datapoint[]);
         }}
@@ -359,113 +364,132 @@ const DisplayAdvancedOptionsButton: FC<DisplayAdvancedOptionsButtonProps> = ({
 };
 
 interface AuxiliarIndependentVariableTableProps {
-  auxiliarIndependentVariables: AuxiliarIndependentVariable[];
+  auxiliarIndependentVariablesArray: number[];
+  auxiliarIndependentVariablesName: string;
   updateAuxiliarIndependentVariables: (
-    auxiliarIndependentVariables: AuxiliarIndependentVariable[]
+    auxiliarIndependentVariables: number[]
   ) => void;
+  updateAuxiliarIndependentVariablesName: (name: string) => void;
+  datasetName: string;
 }
 
 const AuxiliarIndependentVariableTable: FC<
   AuxiliarIndependentVariableTableProps
-> = ({ auxiliarIndependentVariables, updateAuxiliarIndependentVariables }) => {
+> = ({
+  auxiliarIndependentVariablesArray,
+  auxiliarIndependentVariablesName,
+  updateAuxiliarIndependentVariables,
+  updateAuxiliarIndependentVariablesName,
+  datasetName,
+}) => {
   const removeAuxiliarVariableByIndex = (index: number) => {
-    if (auxiliarIndependentVariables.length === 1) {
+    if (auxiliarIndependentVariablesArray.length === 1) {
       return;
     }
 
-    const newVariables = [...auxiliarIndependentVariables];
+    const newVariables = [...auxiliarIndependentVariablesArray];
     newVariables.splice(index, 1);
     updateAuxiliarIndependentVariables(newVariables);
   };
 
   return (
-    <table className="min-w-full divide-y divide-zinc-500">
-      {/*Table Header*/}
-      <thead>
-        <tr className="">
-          <th
-            scope="col"
-            className="py-3.5 pl-4 pr-12 text-left text-sm font-semibold sm:pl-0"
-          ></th>
-          <th
-            scope="col"
-            className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold  sm:pl-0"
-          >
-            Label
-          </th>
-          <th
-            scope="col"
-            className="px-3 py-3.5 text-left text-sm font-semibold "
-          >
-            Value
-          </th>
-        </tr>
-      </thead>
+    <div className="w-full flex flex-col  gap-y-8 items-start pt-8">
+      <div className="w-full animate-in slide-in-from-top-4 fade-in">
+        <label
+          htmlFor="Main Function"
+          className="mb-2 block text-sm font-medium text-zinc-300"
+        >
+          Auxiliary Array Name
+        </label>
 
-      {/*Table Body*/}
-      <tbody className="divide-y divide-zinc-500 text-zinc-400 ">
-        {auxiliarIndependentVariables.map((variable, index) => (
-          <tr
-            key={index}
-            className="animate-in fade-in slide-in-from-top-4 duration-300 "
-          >
-            <td className="whitespace-nowrap py-4 pl-4 pr-12 text-sm font-semibold text-zinc-300 sm:pl-0">
-              Independent Variable {index + 2}
-            </td>
+        <Input
+          type="text"
+          name={`${datasetName}-auxiliar-variables-name`}
+          id={`${datasetName}-auxiliar-variables-name`}
+          value={auxiliarIndependentVariablesName}
+          onChange={(e) =>
+            updateAuxiliarIndependentVariablesName(e.target.value)
+          }
+          extraPadding={true}
+        />
+      </div>
 
-            {/*Label of the variable*/}
-            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium sm:pl-0">
-              <Input
-                type="text"
-                name={"independent-variable-" + index + "-label"}
-                id={"independent-variable-" + index + "-label"}
-                value={variable.name}
-                onChange={(e) => {
-                  const newVariables = [...auxiliarIndependentVariables];
-                  newVariables[index].name = e.target.value;
-                  updateAuxiliarIndependentVariables(newVariables);
-                }}
-              />
-            </td>
-
-            {/*Value of the variable*/}
-            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              <Input
-                type="number"
-                name={"independent-variable-" + index + "-value"}
-                id={"independent-variable-" + index + "-value"}
-                value={variable.value}
-                onChange={(e) => {
-                  const newVariables = [...auxiliarIndependentVariables];
-                  newVariables[index].value = parseFloat(e.target.value);
-                  updateAuxiliarIndependentVariables(newVariables);
-                }}
-              />
-            </td>
-
-            {/*Button to remove a variable*/}
-            <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
-              <XMarkIcon
-                onClick={() => removeAuxiliarVariableByIndex(index)}
-                className="h-5 w-5 text-zinc-500 hover:text-zinc-400 transition-all ease-in-out duration-300 cursor-pointer"
-              />
-            </td>
+      <table className=" divide-y divide-zinc-500 min-w-full">
+        {/*Table Header*/}
+        <thead>
+          <tr className="">
+            <th
+              scope="col"
+              className="py-3.5 pl-4 pr-12 text-left text-sm font-semibold sm:pl-0"
+            >
+              Auxiliary Variables
+            </th>
+            <th
+              scope="col"
+              className="pl-3 pr-5 py-3.5 text-left text-sm font-semibold "
+            >
+              Value
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+
+        {/*Table Body*/}
+        <tbody className="divide-y divide-zinc-500 text-zinc-400 ">
+          {auxiliarIndependentVariablesArray.map((variable, index) => (
+            <tr
+              key={index}
+              className="animate-in fade-in slide-in-from-top-4 duration-300 "
+            >
+              <td className="whitespace-nowrap py-4 pl-4 pr-12 text-sm font-semibold text-zinc-400 sm:pl-0">
+                Index {index + 1} ({auxiliarIndependentVariablesName}
+                {auxiliarIndependentVariablesArray.length > 1 &&
+                  "_" + String(index + 1)}
+                )
+              </td>
+
+              {/*Value of the variable*/}
+              <td className="whitespace-nowrap pl-3 pr-5 py-4 text-sm text-gray-500">
+                <Input
+                  type="number"
+                  name={"independent-variable-" + index + "-value"}
+                  id={"independent-variable-" + index + "-value"}
+                  value={variable}
+                  onChange={(e) => {
+                    const newVariables = [...auxiliarIndependentVariablesArray];
+                    newVariables[index] = parseFloat(e.target.value);
+                    updateAuxiliarIndependentVariables(newVariables);
+                  }}
+                />
+              </td>
+
+              {/*Button to remove a variable*/}
+              <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
+                <XMarkIcon
+                  onClick={() => removeAuxiliarVariableByIndex(index)}
+                  className={clsx(
+                    auxiliarIndependentVariablesArray.length > 1 &&
+                      "hover:text-zinc-400  cursor-pointer",
+                    "h-5 w-5 text-zinc-500  transition-all ease-in-out duration-200"
+                  )}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
 interface AddIndependentVariableButtonProps {
-  auxiliarIndependentVariables: AuxiliarIndependentVariable[];
+  auxiliarIndependentVariablesArray: number[];
   updateAuxiliarIndependentVariables: (
-    auxiliarIndependentVariables: AuxiliarIndependentVariable[]
+    auxiliarIndependentVariables: number[]
   ) => void;
 }
 
 const AddIndependentVariableButton: FC<AddIndependentVariableButtonProps> = ({
-  auxiliarIndependentVariables,
+  auxiliarIndependentVariablesArray,
   updateAuxiliarIndependentVariables,
 }) => {
   return (
@@ -473,17 +497,14 @@ const AddIndependentVariableButton: FC<AddIndependentVariableButtonProps> = ({
       <button
         onClick={() =>
           updateAuxiliarIndependentVariables([
-            ...auxiliarIndependentVariables,
-            {
-              name: "Auxiliar Variable",
-              value: 0,
-            },
-          ] as AuxiliarIndependentVariable[])
+            ...auxiliarIndependentVariablesArray,
+            0,
+          ])
         }
         className="flex flex-row items-center py-2 border-t border-b bg-zinc-600 bg-opacity-20 hover:bg-zinc-500 hover:bg-opacity-20 cursor-pointer text-sm group justify-center text-zinc-400 hover:text-zinc-300 transition-all ease-in-out duration-300 font-semibold gap-x-1.5 border-zinc-500 w-full"
       >
         <PlusCircleIcon className="h-5 w-5" />
-        Add Independent Variable
+        Add New Value
       </button>
     </div>
   );
@@ -525,12 +546,20 @@ const DatasetTable: FC<DatasetTableProps> = ({
   };
 
   // Function to update the auxiliar independent variables of the dataset
-  const updateAuxiliarIndependentVariables = (
-    newAuxiliarIndependentVariables: AuxiliarIndependentVariable[]
+  const updateAuxiliarIndependentVariablesArray = (
+    newAuxiliarIndependentVariables: number[]
   ) => {
     updateDataset(dataset.id, {
       ...dataset,
-      auxiliarDependentVariables: newAuxiliarIndependentVariables,
+      auxiliarIndependentVariablesArray: newAuxiliarIndependentVariables,
+    });
+  };
+
+  // Function to update the name of the auxiliar independent variables array
+  const updateAuxiliarIndependentVariablesName = (name: string) => {
+    updateDataset(dataset.id, {
+      ...dataset,
+      auxiliarIndependentVariablesArrayName: name,
     });
   };
 
@@ -602,7 +631,7 @@ const DatasetTable: FC<DatasetTableProps> = ({
             />
           </div>
 
-          <div className="flex flex-col items-start px-28 pb-5">
+          <div className="flex flex-col items-start px-28 pb-6">
             {/*Display Advanced Options Toggle*/}
             <DisplayAdvancedOptionsButton
               showAdvancedOptions={showAdvancedOptions}
@@ -617,19 +646,26 @@ const DatasetTable: FC<DatasetTableProps> = ({
               )}
             >
               <AuxiliarIndependentVariableTable
-                auxiliarIndependentVariables={
-                  dataset.auxiliarDependentVariables
+                auxiliarIndependentVariablesArray={
+                  dataset.auxiliarIndependentVariablesArray
+                }
+                auxiliarIndependentVariablesName={
+                  dataset.auxiliarIndependentVariablesArrayName
                 }
                 updateAuxiliarIndependentVariables={
-                  updateAuxiliarIndependentVariables
+                  updateAuxiliarIndependentVariablesArray
                 }
+                updateAuxiliarIndependentVariablesName={
+                  updateAuxiliarIndependentVariablesName
+                }
+                datasetName={dataset.name}
               />
               <AddIndependentVariableButton
-                auxiliarIndependentVariables={
-                  dataset.auxiliarDependentVariables
+                auxiliarIndependentVariablesArray={
+                  dataset.auxiliarIndependentVariablesArray
                 }
                 updateAuxiliarIndependentVariables={
-                  updateAuxiliarIndependentVariables
+                  updateAuxiliarIndependentVariablesArray
                 }
               />
             </div>

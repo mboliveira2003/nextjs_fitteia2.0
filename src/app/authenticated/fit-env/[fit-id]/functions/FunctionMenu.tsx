@@ -85,7 +85,7 @@ const SubfunctionDefinition: FC<SubfunctionDefinitionProps> = ({
   return (
     <>
       {subfunctions.map((subfunction, index) => (
-        <div className="flex flex-row items-center w-full gap-x-2 animate-in fade-in slide-in-from-top-4">
+        <div key={index} className="flex flex-row items-center w-full gap-x-2 animate-in fade-in slide-in-from-top-4">
           {/*Subfunction definition input*/}
           <div className="w-full">
             <label
@@ -110,7 +110,11 @@ const SubfunctionDefinition: FC<SubfunctionDefinitionProps> = ({
 
               {/*Remove subfunction button*/}
               <XMarkIcon
-                className="h-5 w-5 cursor-pointer text-zinc-500 hover:text-zinc-400 transition-all ease-in-out"
+                className={clsx(
+                  subfunctions.length > 1 &&
+                    "cursor-pointer hover:text-zinc-400",
+                  "h-5 w-5 text-zinc-500 transition-all duration-200 ease-in-out"
+                )}
                 onClick={() =>
                   subfunctions.length > 1 &&
                   updateSubfunctions(subfunctions.filter((_, i) => i !== index))
@@ -211,7 +215,6 @@ const FunctionMenu: FC<FunctionMenuProps> = ({
         className="h-fit w-full"
       >
         <div className="flex-col flex w-full px-3 gap-y-6 py-6">
-          
           {/*Main function definition*/}
           <MainFunctionDefinition
             functionOption={functionOption}

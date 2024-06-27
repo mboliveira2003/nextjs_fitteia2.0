@@ -30,7 +30,7 @@ const LoginForm: FC = (): ReactElement => {
       const response = await signInWithPopup(auth, googleAuthProvider);
 
       // Redirect to the user's fits page
-      router.push("/authenticated/my-fits");
+      router.push("/authenticated/fit-env/new/datasets");
 
       // Stop loading animation
       setLoadingGoogle(false);
@@ -60,7 +60,7 @@ const LoginForm: FC = (): ReactElement => {
       );
 
       // Redirect to the user's fits page
-      router.push("/authenticated/my-fits");
+      router.push("/authenticated/fit-env/new/datasets");
 
       // Stop loading animation
       setLoadingEmail(false);

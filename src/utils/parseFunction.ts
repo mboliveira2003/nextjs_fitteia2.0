@@ -1,6 +1,7 @@
 type FunctionInput = {
   mainFunction: string;
   subfunctions: string[];
+  auxiliaryVariable: string;
 };
 
 type ParsedOutput = {
@@ -11,7 +12,7 @@ type ParsedOutput = {
 };
 
 function parseFunction(input: FunctionInput): ParsedOutput | string {
-  const { mainFunction, subfunctions } = input;
+  const { mainFunction, subfunctions, auxiliaryVariable } = input;
 
   // Check main function
   const mainCheck = checkMainFunction(mainFunction);
@@ -39,13 +40,18 @@ function parseFunction(input: FunctionInput): ParsedOutput | string {
   const combinedFunction = combineFunctions(mainFunction, subfunctions);
 
   // Process the combined function
-  const processedFunction = processCombinedFunction(combinedFunction, dependentVar, independentVar);
+  const processedFunction = processCombinedFunction(
+    combinedFunction,
+    dependentVar,
+    independentVar
+  );
 
   // Extract parameters
   const parameters = extractParameters(
     combinedFunction,
     independentVar,
-    dependentVar
+    dependentVar,
+    auxiliaryVariable
   );
 
   // Return the output
@@ -74,7 +80,6 @@ function checkSubfunctions(
   independentVar: string,
   dependentVar: string
 ): true | string {
-
   // Check the format of the variable names
   // Alphanumeric characters and underscores are allowed
   const subRegex = /^([a-zA-Z0-9_]+)\(([a-zA-Z0-9_]+)\)\s*=\s*.*$/;
@@ -122,7 +127,11 @@ function combineFunctions(
   return combinedFunction;
 }
 
-function processCombinedFunction(combinedFunction: string, dependentVar: string, independentVar: string): string {
+function processCombinedFunction(
+  combinedFunction: string,
+  dependentVar: string,
+  independentVar: string
+): string {
   // Create a regex to remove the introductory part of the combined function
   const combinedFunctionRegex = new RegExp(
     `^${dependentVar}\\(${independentVar}\\)\\s*=\\s*`
@@ -145,7 +154,8 @@ function processCombinedFunction(combinedFunction: string, dependentVar: string,
 function extractParameters(
   combinedFunction: string,
   independentVar: string,
-  dependentVar: string
+  dependentVar: string,
+  auxiliaryVariable: string
 ): string[] {
   const ignoredCppWords = new Set([
     "if",
@@ -412,13 +422,16 @@ function extractParameters(
   // Regex to match words that are valid variable names
   const words = combinedFunction.match(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g) || [];
 
+  // Regular expression to match the auxiliaryVariable and any following underscore and number
+  const auxVarRegex = new RegExp(`^${auxiliaryVariable}(?:_\\d+)?$`);
+
   for (const word of words) {
     if (
-      // Ignore all C++ keywords, onefite lib functions, and the dependent and independent variables
       !ignoredCppWords.has(word) &&
       !libFunctions.has(word) &&
       word !== independentVar &&
-      word !== dependentVar
+      word !== dependentVar &&
+      !auxVarRegex.test(word) // Use the regex to test for auxiliaryVariable patterns
     ) {
       uniqueVars.add(word);
     }

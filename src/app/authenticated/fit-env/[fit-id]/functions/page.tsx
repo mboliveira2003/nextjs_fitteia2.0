@@ -7,6 +7,7 @@ import React, { FC, ReactElement, useState, useEffect } from "react";
 import FunctionMenu from "./FunctionMenu";
 import { Function } from "@/app/types";
 import { getDatasets, getFunctions, updateFunctions } from "@/utils/storage";
+import { ArrowRightIcon } from "@heroicons/react/16/solid";
 
 const Page: FC = (): ReactElement => {
   // State to store the functions
@@ -51,7 +52,7 @@ const Page: FC = (): ReactElement => {
   };
 
   return (
-    <div className="w-full h-fit bg-white/[0.025] ring-inset items-center ring-1 ring-white/[0.075] backdrop-blur-md px-10 py-5 gap-y-8 flex flex-col rounded-lg min-h-full">
+    <div className="w-full h-fit bg-white/[0.025] ring-inset items-center ring-1 ring-white/[0.075] backdrop-blur-md px-10 py-5 gap-y-8 flex flex-col rounded-lg min-h-full max-w-screen-2xl">
       <div className="flex flex-row items-end justify-between w-full">
         {/*Title and description*/}
         <div className="flex flex-col items-start">
@@ -64,9 +65,10 @@ const Page: FC = (): ReactElement => {
         {/*Save and fit button*/}
         <Link
           href="/authenticated/fit-env/new/fit"
-          className="flex flex-row items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:scale-[0.98] ease-in-out transition-all duration-300 bg-orange-500 gap-x-1.5 px-3 py-2 rounded-md"
+          className="flex flex-row items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:bg-orange-600 ease-in-out transition-all duration-200 bg-orange-500 gap-x-2 px-3 py-2 rounded-md"
         >
-          Save and fit
+          Next
+          <ArrowRightIcon className="h-4 w-4" />
         </Link>
       </div>
 
@@ -85,8 +87,8 @@ const Page: FC = (): ReactElement => {
         onClick={() => addFunction()}
         className="flex flex-col gap-y-2 w-fit"
       >
-        <div className="flex flex-row items-center group rounded-md cursor-pointer border border-dashed border-zinc-500 text-sm group justify-center text-orange-500 font-semibold ease-in-out transition-all duration-300 gap-x-1.5 px-3 py-2">
-          <div className="flex flex-row items-center gap-x-1.5 group-hover:scale-105 transition-all ease-in-out duration-300">
+        <div className="flex flex-row items-center group rounded-md cursor-pointer border border-dashed border-zinc-500 text-sm group justify-center text-orange-500 hover:bg-white/5 font-semibold ease-in-out transition-all duration-200 gap-x-1.5 px-3 py-2">
+          <div className="flex flex-row items-center gap-x-1.5 transition-all ease-in-out duration-300">
             <PlusIcon className="h-5 w-5" />
             Add Function
           </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -70,9 +70,7 @@ const MyChart: React.FC<MyChartProps> = ({
   dependentVariableName,
   datasetOnly = false,
 }) => {
-
-  console.log("Fitted Points Scatter Plot:", fittedPoints)
-  console.log("Dataset Only Scatter Plot:", datasetOnly)
+  const chartRef = useRef(null); // Add a ref to the chart
 
   const datasets: ChartDataset<"line", DataPointWithError[]>[] = [];
 
@@ -101,15 +99,13 @@ const MyChart: React.FC<MyChartProps> = ({
   }
 
   const allPoints = [...dataPoints, ...fittedPoints];
-  // Calculate the min and max values for x-axis with padding
   const minX = Math.min(...allPoints.map((point) => point.independentVariable));
   const maxX = Math.max(...allPoints.map((point) => point.independentVariable));
-  const xPadding = (maxX - minX) * 0.1; // 10% padding on each side
+  const xPadding = (maxX - minX) * 0.1;
 
-  // Calculate the min and max values for y-axis with padding
   const minY = Math.min(...allPoints.map((point) => point.dependentVariable));
   const maxY = Math.max(...allPoints.map((point) => point.dependentVariable));
-  const yPadding = (maxY - minY) * 0.1; // 10% padding on each side
+  const yPadding = (maxY - minY) * 0.1;
 
   const data: ChartData<"line", DataPointWithError[]> = {
     labels: [
@@ -138,29 +134,25 @@ const MyChart: React.FC<MyChartProps> = ({
         display: false,
       },
       tooltip: {
-        enabled: true, // Ensure tooltips are enabled
-        backgroundColor: "#27272a", // Background color
-        titleColor: "#e4e4e7", // Title text color
-        bodyColor: "#e4e4e7", // Body text color
-        borderColor: "#52525b", // Border color
-        borderWidth: 1, // Border width
-        padding: 12, // Padding around the content
-        displayColors: false, // Do not show color boxes
+        enabled: true,
+        backgroundColor: "#27272a",
+        titleColor: "#e4e4e7",
+        bodyColor: "#e4e4e7",
+        borderColor: "#52525b",
+        borderWidth: 1,
+        padding: 12,
+        displayColors: false,
         callbacks: {
-          // Custom callback to format the tooltip
           label: function (tooltipItem: TooltipItem<"line">) {
             const datasetIndex = tooltipItem.datasetIndex;
             const value = tooltipItem.formattedValue;
 
-            // Show tooltip only for the first dataset
             if (datasetIndex === 0) {
-              // Customize tooltip content for Dataset 1
               return `Error:   (${
-              data.datasets[0].data[tooltipItem.dataIndex].xError
+                data.datasets[0].data[tooltipItem.dataIndex].xError
               }, ${data.datasets[0].data[tooltipItem.dataIndex].yError})`;
             }
 
-            // Return an empty string to effectively hide the tooltip for other datasets
             return "";
           },
           title: function (tooltipItems: TooltipItem<"line">[]) {
@@ -168,7 +160,6 @@ const MyChart: React.FC<MyChartProps> = ({
           },
         },
         filter: function (tooltipItem: TooltipItem<"line">) {
-          // Show tooltip only for the first dataset
           return tooltipItem.datasetIndex === 0;
         },
       },
@@ -237,7 +228,6 @@ const MyChart: React.FC<MyChartProps> = ({
     afterDatasetsDraw: (chart) => {
       const ctx = chart.ctx;
 
-      // Corrected scale type usage
       const xScale = chart.scales["x"] as unknown as Scale<LinearScaleOptions>;
       const yScale = chart.scales["y"] as unknown as Scale<LinearScaleOptions>;
 
@@ -256,7 +246,6 @@ const MyChart: React.FC<MyChartProps> = ({
             const yPixelError =
               y - yScale.getPixelForValue(data.y - data.yError);
 
-            // Draw horizontal error bars
             ctx.strokeStyle = dataset.borderColor as string;
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -264,7 +253,6 @@ const MyChart: React.FC<MyChartProps> = ({
             ctx.lineTo(x + xPixelError, y);
             ctx.stroke();
 
-            // Draw vertical error bars
             ctx.beginPath();
             ctx.moveTo(x, y - yPixelError);
             ctx.lineTo(x, y + yPixelError);
@@ -277,7 +265,23 @@ const MyChart: React.FC<MyChartProps> = ({
 
   ChartJS.register(errorBarPlugin);
 
-  return <Line data={data} options={options} />;
+  const handleExport = () => {
+    const chart = chartRef.current as any;
+    if (chart) {
+      const image = chart.toBase64Image();
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = "chart.png";
+      link.click();
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-full relative">
+      <Line ref={chartRef} data={data} options={options} />
+      <button className="flex flex-row absolute right-7 backdrop-blur-lg top-11 w-fit whitespace-nowrap items-center cursor-pointer text-xs group justify-center text-white shadow-md shadow-zinc-700/10 font-semibold hover:bg-zinc-500 ease-in-out transition-all duration-150 bg-zinc-600 gap-x-1.5 px-2 py-1.5 rounded-md" onClick={handleExport}>Export</button>
+    </div>
+  );
 };
 
 export default MyChart;

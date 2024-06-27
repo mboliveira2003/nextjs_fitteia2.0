@@ -30,8 +30,6 @@ const Page: FC = (): ReactElement => {
     setSelectedDatasets(foundDatasets);
   };
 
-  console.log("Selected Datasets:", selectedDatasets);
-
   // Function to update the selected function by name
   const updateSelectedFunction = (functionName: string) => {
     const foundFunction = functions.find((func) =>
@@ -44,7 +42,7 @@ const Page: FC = (): ReactElement => {
 
   if (!selectedFunction || !selectedDatasets || selectedDatasets.length === 0) {
     return (
-      <div className="w-fit h-fit bg-white/[0.025] backdrop-blur-md ring-1 ring-white/[0.075] ring-inset px-7 py-5 flex flex-row gap-x-5 items-center rounded-lg">
+      <div className="w-fit h-fit bg-white/[0.025] backdrop-blur-md ring-1 ring-white/[0.075] ring-inset px-7 py-5 flex flex-row gap-x-5 items-center rounded-lg max-w-screen-2xl">
         <ExclamationCircleIcon className="w-10 h-10 text-orange-500" />
         <div className="flex flex-col items-start">
           <p className="text-md font-medium text-zinc-300">
@@ -60,7 +58,7 @@ const Page: FC = (): ReactElement => {
   }
 
   return (
-    <div className="w-full h-fit min-h-screen bg-white/[0.025] backdrop-blur-md ring-1 ring-white/[0.075] ring-inset px-10 py-5 gap-y-8 flex flex-col rounded-lg">
+    <div className="w-full h-fit min-h-screen bg-white/[0.025] backdrop-blur-md ring-1 ring-white/[0.075] ring-inset px-10 py-5 gap-y-8 flex flex-col rounded-lg max-w-screen-2xl">
       <FittingMenu
         selectedDatasets={selectedDatasets}
         selectedFunction={selectedFunction}

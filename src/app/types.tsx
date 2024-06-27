@@ -27,7 +27,8 @@ interface Dataset {
   datapoints: Datapoint[];
   dependentVariableName: string;
   independentVariableName: string;
-  auxiliarDependentVariables: AuxiliarIndependentVariable[];
+  auxiliarIndependentVariablesArrayName: string;
+  auxiliarIndependentVariablesArray: number[];
 }
 
 type Function = {

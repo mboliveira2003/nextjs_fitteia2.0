@@ -19,6 +19,7 @@ import MyChart from "@/components/common/charts/ScatterPlot";
 import {
   ArrowPathIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import {
   getFunctions,
@@ -66,6 +67,15 @@ const FittingDefinitionMenu: FC<FittingDefinitionMenuProps> = ({
   errorParsingParameters,
   updateFitResults,
 }): ReactElement => {
+  // Function to scroll to the div with id results.
+  // The top pf the div should touch the top of the screen when the scroll is complete
+  const scrollToResults = () => {
+    const resultsDiv = document.getElementById("results");
+    if (resultsDiv) {
+      resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <div className="flex flex-col items-start w-full gap-y-8">
       {/*Header and Fit button*/}
@@ -81,28 +91,30 @@ const FittingDefinitionMenu: FC<FittingDefinitionMenuProps> = ({
 
         {/*Fit button*/}
         <button
-          onClick={() =>
+          onClick={() => {
             updateFitResults(
               selectedDatasets,
               selectedFunction,
               globalFit,
               true
-            )
-          }
-          className="flex flex-row whitespace-nowrap items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-zinc-700/10 font-semibold hover:scale-[0.98] ease-in-out transition-all duration-150 bg-zinc-700 gap-x-1.5 px-3 py-2 rounded-md"
+            ),
+              scrollToResults();
+          }}
+          className="flex flex-row whitespace-nowrap items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-zinc-700/10 font-semibold hover:bg-zinc-500 ease-in-out transition-all duration-200 bg-zinc-600 gap-x-1.5 px-3 py-2 rounded-md"
         >
           {selectedDatasets.length > 1 ? "Plot datasets" : "Plot dataset"}
         </button>
         <button
-          onClick={() =>
+          onClick={() => {
             updateFitResults(
               selectedDatasets,
               selectedFunction,
               globalFit,
               false
-            )
-          }
-          className="flex flex-row whitespace-nowrap items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:scale-[0.98] ease-in-out transition-all duration-150 bg-orange-500 gap-x-1.5 px-3 py-2 rounded-md"
+            ),
+              scrollToResults();
+          }}
+          className="flex flex-row whitespace-nowrap items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:bg-orange-600 ease-in-out transition-all duration-200 bg-orange-500 gap-x-1.5 px-3 py-2 rounded-md"
         >
           {selectedDatasets.length > 1 ? "Fit datasets" : "Fit dataset"}
         </button>
@@ -296,31 +308,49 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
   fittedFunction,
   loadingFitResults,
 }): ReactElement => {
-
   const isFitGlobal = fitResults ? fitResults.FitType === "Global" : false;
-  
-  const parameterTables: ParameterTable[][] = fitResults ? fitResults["par-tables"] : [];
 
-  const chi2Array = fitResults ?  extractChiSquared(fitResults["fit-results"]) : [];
+  const parameterTables: ParameterTable[][] = fitResults
+    ? fitResults["par-tables"]
+    : [];
 
-  const reducedChi2Array = chi2Array.length > 0 ? chi2Array.map(
-    (chi2, index) =>
-      chi2 /
-      (fittedDatasets[index].datapoints.length -
-        parameterTables[isFitGlobal ? 0 : index].filter((param) => param.free).length)
-  ) : [];
+  const chi2Array = fitResults
+    ? extractChiSquared(fitResults["fit-results"])
+    : [];
 
-  const fittedPointsArray = fitResults ? fitResults["fit-curves"].map((curveString) =>
-    curveString ? extractXYPairs(curveString) : []
-  ) : [];
+  const reducedChi2Array =
+    chi2Array.length > 0
+      ? chi2Array.map(
+          (chi2, index) =>
+            chi2 /
+            (fittedDatasets[index].datapoints.length -
+              parameterTables[isFitGlobal ? 0 : index].filter(
+                (param) => param.free
+              ).length)
+        )
+      : [];
 
-  const datasetOnly = fitResults ? fitResults["fit-curves"][0] === "dataset-only" : false;
+  const fittedPointsArray = fitResults
+    ? fitResults["fit-curves"].map((curveString) =>
+        curveString ? extractXYPairs(curveString) : []
+      )
+    : [];
 
-  
+  const datasetOnly = fitResults
+    ? fitResults["fit-curves"][0] === "dataset-only"
+    : false;
+
+  console.log("Fit Results:", fitResults)
+  console.log("Parameter Tables:", parameterTables)
+  console.log("Chi2 Array:", chi2Array)
+  console.log("Reduced Chi2 Array:", reducedChi2Array)
+  console.log("Fitted Points Array:", fittedPointsArray)
+  console.log("Fitted Datasets:", fittedDatasets)
+  console.log("Fitted Function:", fittedFunction)
 
   if (loadingFitResults) {
     return (
-      <div className="w-full flex flex-col gap-y-8 pt-10">
+      <div id="results" className="w-full flex flex-col gap-y-8 pt-10">
         <div className="flex flex-col items-start w-full">
           <h1 className="text-white font-semibold text-lg">Results</h1>
           <p className="text-zinc-500 text-base font-normal">
@@ -344,7 +374,7 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
 
   if (errorFetchingFitResults) {
     return (
-      <div className="w-full flex flex-col gap-y-8 pt-10">
+      <div id="results" className="w-full flex flex-col gap-y-8 pt-10">
         <div className="flex flex-col items-start w-full">
           <h1 className="text-white font-semibold text-lg">Results</h1>
           <p className="text-zinc-500 text-base font-normal">
@@ -368,7 +398,7 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
 
   if (datasetOnly) {
     return (
-      <div className="w-full flex flex-col gap-y-8 pt-10">
+      <div id="results" className="w-full flex flex-col gap-y-8 pt-10">
         <div className="flex flex-col items-start w-full">
           <h1 className="text-white font-semibold text-lg">Results</h1>
           <p className="text-zinc-500 text-base font-normal">
@@ -396,16 +426,15 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
     );
   }
 
-  if (!fitResults ||
+  if (
+    !fitResults ||
     parameterTables.length === 0 ||
-    chi2Array.length === 0 ||
-    reducedChi2Array.length === 0 ||
     fittedPointsArray.length === 0 ||
     fittedDatasets.length === 0 ||
     !fittedFunction
   ) {
     return (
-      <div className="w-full flex flex-col gap-y-8 pt-10">
+      <div id="results" className="w-full flex flex-col gap-y-8 pt-10">
         <div className="flex flex-col items-start w-full">
           <h1 className="text-white font-semibold text-lg">Results</h1>
           <p className="text-zinc-500 text-base font-normal">
@@ -428,7 +457,7 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
   }
 
   return (
-    <div className="w-full flex flex-col gap-y-8 pt-10">
+    <div id="results" className="w-full flex flex-col gap-y-8 pt-10">
       <div className="flex flex-col items-start w-full">
         <h1 className="text-white font-semibold text-lg">Results</h1>
         <p className="text-zinc-500 text-base font-normal">
@@ -439,7 +468,7 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
       </div>
 
       {fittedDatasets.map((dataset, index) => (
-        <div className="w-full h-full" key={index}>
+        <div className="w-full h-full flex flex-col gap-y-10" key={index}>
           <div className="w-full px-14">
             <MyChart
               dataPoints={dataset.datapoints}
@@ -472,29 +501,32 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
                     </th>
                     <th
                       scope="col"
-                      className="px-10 py-3 font-semibold text-sm text-white"
+                      className="px-10 py-3 flex flex-row gap-x-2 items-center font-semibold text-sm text-white"
                     >
                       Error
+                      <ExclamationTriangleIcon title="These errors may not provide a correct estimate of the true uncertainty of the fitted values of the parameters." className="w-4 h-4 text-orange-400 cursor-pointer mt-1" />
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-500">
-                  {parameterTables[isFitGlobal ? 0 : index]?.map((parameter, paramIndex) => (
-                    <tr key={paramIndex} className="">
-                      <th
-                        scope="row"
-                        className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
-                      >
-                        {parameter.name}
-                      </th>
-                      <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                        {parameter.value}
-                      </td>
-                      <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                        {parameter.err}
-                      </td>
-                    </tr>
-                  ))}
+                  {parameterTables[isFitGlobal ? 0 : index]?.map(
+                    (parameter, paramIndex) => (
+                      <tr key={paramIndex} className="">
+                        <th
+                          scope="row"
+                          className="px-10 py-4 font-normal text-zinc-300 whitespace-nowrap"
+                        >
+                          {parameter.name}
+                        </th>
+                        <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
+                          {parameter.value}
+                        </td>
+                        <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
+                          {parameter.err}
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
@@ -527,7 +559,7 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
                       Chi Squared
                     </th>
                     <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                      {chi2Array[index]}
+                      {chi2Array[index] ? chi2Array[index] : "N/A"}
                     </td>
                   </tr>
                   <tr key="Reduced Chi2" className="">
@@ -538,7 +570,7 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
                       Reduced Chi Squared
                     </th>
                     <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
-                      {reducedChi2Array[index]}
+                      {reducedChi2Array[index] ? reducedChi2Array[index] : "N/A"}
                     </td>
                   </tr>
                   <tr key="points" className="">
@@ -561,7 +593,9 @@ const FittingResultsMenu: FC<FittingResultsMenuProps> = ({
                     </th>
                     <td className="px-10 py-4 font-normal text-zinc-400 whitespace-nowrap">
                       {
-                        parameterTables[isFitGlobal ? 0 :index].filter((param) => param.free).length
+                        parameterTables[isFitGlobal ? 0 : index].filter(
+                          (param) => param.free
+                        ).length
                       }
                     </td>
                   </tr>
@@ -663,16 +697,27 @@ const FittingMenu: FC<FittingMenuProps> = ({
     }
 
     const data = await response.json();
-    console.log("Data:", data)
     setFitResults(data);
     setLoadingFitResults(false);
   }
 
   // Whenever the selected function changes, update the parameters
   useEffect(() => {
+    // Verify if all the selected datasets have the same auxiliary variables name
+    const firstAuxiliarIndependentVariablesArrayName =
+      selectedDatasets[0].auxiliarIndependentVariablesArrayName;
+    const auxiliarIndependentVariablesArrayNameEqual = selectedDatasets.every(
+      (dataset) =>
+        dataset.auxiliarIndependentVariablesArrayName ===
+        firstAuxiliarIndependentVariablesArrayName
+    );
+
     const functionInput: FunctionInput = {
       mainFunction: selectedFunction.mainFunction,
       subfunctions: selectedFunction.subfunctions,
+      auxiliaryVariable: auxiliarIndependentVariablesArrayNameEqual
+        ? selectedDatasets[0].auxiliarIndependentVariablesArrayName
+        : "",
     };
 
     const parsedOutput = parseFunction(functionInput);
@@ -733,7 +778,7 @@ const FittingMenu: FC<FittingMenuProps> = ({
     updateIndepentVariable(parsedOutput.independentVar, selectedFunction);
     updateDependentVariable(parsedOutput.dependentVar, selectedFunction);
     updateProcessedFunction(parsedOutput.processedFunction, selectedFunction);
-  }, [selectedFunction]);
+  }, [selectedFunction, selectedDatasets]);
 
   // Upadate the parameters min value
   const updateMin = (index: number, value: number) => {

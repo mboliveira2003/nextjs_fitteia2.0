@@ -43,6 +43,49 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
+    // Verify if any of the selectedDatasets has a datapoint with any atribute equal to null and return the name of the datasets found
+    const datasetsWithNullDatapoints = selectedDatasets
+      .filter((dataset) =>
+        dataset.datapoints.some((datapoint) =>
+          Object.values(datapoint).some((value) => value === null)
+        )
+      )
+      .map((dataset) => dataset.name);
+
+    // Return an error message containing the names of the datasets with null datapoints
+    if (datasetsWithNullDatapoints.length > 0) {
+      return NextResponse.json(
+        {
+          error: `The following datasets have datapoints with null values: ${datasetsWithNullDatapoints.join(
+            ", "
+          )}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Verify if any of the selectedDatasets has a datapoint with a dependentVariableError equal to 0 and return the name of the datasets found
+    // This has to be done in order to avoid division by zero
+    const datasetsWithZeroError = selectedDatasets
+      .filter((dataset) =>
+        dataset.datapoints.some(
+          (datapoint) => datapoint.dependentVariableError === 0
+        )
+      )
+      .map((dataset) => dataset.name);
+
+    // Return an error message containing the names of the datasets with zero errors
+    if (datasetsWithZeroError.length > 0) {
+      return NextResponse.json(
+        {
+          error: `The following datasets have datapoints with zero error on the dependent variable: ${datasetsWithZeroError.join(
+            ", "
+          )}`,
+        },
+        { status: 400 }
+      );
+    }
+
     let fitRequest: FitRequest;
 
     if (selectedDatasets.length === 1) {
@@ -54,6 +97,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         dependentVariable,
         isFitGlobal
       );
+
     } else {
       fitRequest = constructMultiDatasetFitRequest(
         selectedDatasets,
@@ -75,10 +119,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     form.append("username", "mboliveira");
     form.append("file", jsonBlob, "data.json");
 
-    const response = await fetch("http://onefite-t.vps.tecnico.ulisboa.pt:8142/fit", {
-      method: "POST",
-      body: form as any,
-    });
+    const response = await fetch(
+      "http://onefite-t.vps.tecnico.ulisboa.pt:8142/fit",
+      {
+        method: "POST",
+        body: form as any,
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Server responded with status: ${response.status}`);
@@ -86,7 +133,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const jsonResponse = await response.json();
 
-    console.log("Obtained response:", jsonResponse)
+    console.log("Obtained response:", jsonResponse);
 
     if (
       !jsonResponse["fit-curves"] ||
@@ -128,6 +175,8 @@ function constructSingleDatasetFitRequest(
   const dependentVariableMargin =
     0.15 * (maxDependentVariable - minDependentVariable);
 
+  // Calculates derivatives using central differences and propagates errors
+  /*
   const propagatedDatapoints = calculatePropagatedErrors(
     selectedDataset.datapoints
   );
@@ -135,6 +184,16 @@ function constructSingleDatasetFitRequest(
     .map(
       (datapoint) =>
         `${datapoint.independentVariable} ${datapoint.dependentVariable} ${datapoint.propagatedDependentVariableError}`
+    )
+    .join("\n");
+  */
+
+  // Makes use of fitteia built-in error propagation, which calculates derivatives using a "filter method"
+  // This makes the derivative less prone to noise
+  const dataString = selectedDataset.datapoints
+    .map(
+      (datapoint) =>
+        `${datapoint.independentVariable} ${datapoint.dependentVariable} ${datapoint.dependentVariableError} ${datapoint.independentVariableError}`
     )
     .join("\n");
 
@@ -145,13 +204,12 @@ function constructSingleDatasetFitRequest(
     Funcy0: "auto",
     SelectedDataSet: "tags.txt",
     Tags: ["tags.txt"],
+    T: selectedDataset.auxiliarIndependentVariablesArrayName, 
     Num: 500,
-    Dados: `# DATA dum = 1\n# TAG = tags.txt\n${dataString}`,
+    Dados: `# DATA ${selectedDataset.auxiliarIndependentVariablesArrayName} = ${selectedDataset.auxiliarIndependentVariablesArray.join(" ")}\n# TAG = tags.txt\n${dataString}`,
     FitType: isFitGlobal ? "Global" : "Individual",
-    Function: processedFunction,
-    Parameters: parameters
-      .map((param) => param.name)
-      .join(","),
+    Function: independentVariable + " = " + processedFunction,
+    Parameters: parameters.map((param) => param.name).join(","),
     X: independentVariable,
     Xmax: (maxIndependentVariable + independentVariableMargin).toString(),
     Xmin: (minIndependentVariable - independentVariableMargin).toString(),
@@ -159,6 +217,8 @@ function constructSingleDatasetFitRequest(
     Ymax: (maxDependentVariable + dependentVariableMargin).toString(),
     Ymin: (minDependentVariable - dependentVariableMargin).toString(),
   };
+
+  console.log(parameters)
 
   parameters.forEach((param, index) => {
     fitRequest[`F${index}`] = param.fixed ? "Fixed" : "Free";
@@ -178,7 +238,6 @@ function constructMultiDatasetFitRequest(
   dependentVariable: string,
   isFitGlobal: boolean
 ): FitRequest {
-  
   // Extract all the independent variable values for all datasets
   const independentVariableValuesArray = selectedDatasets.map((dataset) =>
     dataset.datapoints.map((datapoint) => datapoint.independentVariable)
@@ -187,7 +246,7 @@ function constructMultiDatasetFitRequest(
   // Construct arrays with their maxima, minima and the margin to add in the x direction
   const minIndependentVariableArray = independentVariableValuesArray.map(
     (values) => Math.min(...values)
-    );
+  );
   const maxIndependentVariableArray = independentVariableValuesArray.map(
     (values) => Math.max(...values)
   );
@@ -196,8 +255,12 @@ function constructMultiDatasetFitRequest(
   );
 
   // Calculate the maximum and minimum values for the x-axis with padding
-  const xMaxArray = maxIndependentVariableArray.map((max, index) => max + independentVariableMarginArray[index]);
-  const xMinArray = minIndependentVariableArray.map((min, index) => min - independentVariableMarginArray[index]);
+  const xMaxArray = maxIndependentVariableArray.map(
+    (max, index) => max + independentVariableMarginArray[index]
+  );
+  const xMinArray = minIndependentVariableArray.map(
+    (min, index) => min - independentVariableMarginArray[index]
+  );
 
   // Extract all the dependent variable values for all datasets
   const dependentVariableValuesArray = selectedDatasets.map((dataset) =>
@@ -205,30 +268,54 @@ function constructMultiDatasetFitRequest(
   );
 
   // Construct arrays with their maxima, minima and the margin to add in the y direction
-  const minDependentVariableArray = dependentVariableValuesArray.map(
-    (values) => Math.min(...values)
+  const minDependentVariableArray = dependentVariableValuesArray.map((values) =>
+    Math.min(...values)
   );
-  const maxDependentVariableArray = dependentVariableValuesArray.map(
-    (values) => Math.max(...values)
+  const maxDependentVariableArray = dependentVariableValuesArray.map((values) =>
+    Math.max(...values)
   );
   const dependentVariableMarginArray = maxDependentVariableArray.map(
     (max, index) => 0.15 * (max - minDependentVariableArray[index])
   );
 
   // Calculate the maximum and minimum values for the y-axis with padding
-  const yMaxArray = maxDependentVariableArray.map((max, index) => max + dependentVariableMarginArray[index]);
-  const yMinArray = minDependentVariableArray.map((min, index) => min - dependentVariableMarginArray[index]);
+  const yMaxArray = maxDependentVariableArray.map(
+    (max, index) => max + dependentVariableMarginArray[index]
+  );
+  const yMinArray = minDependentVariableArray.map(
+    (min, index) => min - dependentVariableMarginArray[index]
+  );
+
+  // Check wether all the selected datasets have the same auxiliary variable
+  const auxiliarIndependentVariablesArrayName = selectedDatasets[0].auxiliarIndependentVariablesArrayName;
+  const allAuxiliarIndependentVariablesArrayNameEqual = selectedDatasets.every(
+    (dataset) => dataset.auxiliarIndependentVariablesArrayName === auxiliarIndependentVariablesArrayName
+  );
 
   let dados = "";
   selectedDatasets.forEach((dataset, index) => {
+    // Calculates derivatives using central differences and propagates errors
+    /*
     const propagatedDatapoints = calculatePropagatedErrors(dataset.datapoints);
+
     const dataString = propagatedDatapoints
       .map(
         (datapoint) =>
           `${datapoint.independentVariable} ${datapoint.dependentVariable} ${datapoint.propagatedDependentVariableError}`
       )
       .join("\n");
-    dados += `# DATA dum = 1\n# TAG = ${index + 1}\n${dataString}\n\n`;
+    */
+
+    // Makes use of fitteia built-in error propagation, which calculates derivatives using a "filter method"
+    // This makes the derivative less prone to noise
+    const dataString = dataset.datapoints
+      .map(
+        (datapoint) =>
+          `${datapoint.independentVariable} ${datapoint.dependentVariable} ${datapoint.dependentVariableError} ${datapoint.independentVariableError}`
+      )
+      .join("\n");
+
+    dados += `# DATA ${ allAuxiliarIndependentVariablesArrayNameEqual ? auxiliarIndependentVariablesArrayName : "dummy"} = ${allAuxiliarIndependentVariablesArrayNameEqual ? selectedDatasets[index].auxiliarIndependentVariablesArray.join(" "): "1"}\n# TAG = ${index + 1}\n${dataString}\n\n`;
   });
 
   const fitRequest: FitRequest = {
@@ -238,15 +325,14 @@ function constructMultiDatasetFitRequest(
     Funcy0: "auto",
     SelectedDataSet: "1",
     Tags: selectedDatasets.map((_, index) => `${index + 1}`),
+    T: allAuxiliarIndependentVariablesArrayNameEqual ? auxiliarIndependentVariablesArrayName : "dummy",
     Num: 500,
     Dados: dados,
     FitType: isFitGlobal ? "Global" : "Individual",
-    Function: processedFunction,
-    Parameters: parameters
-      .map((param) => param.name)
-      .join(","),
+    Function: independentVariable + " = " + processedFunction,
+    Parameters: parameters.map((param) => param.name).join(","),
     X: independentVariable,
-    // For each entry in the 
+    // For each entry in the
     Xmax: xMaxArray.join("\\,"),
     Xmin: xMinArray.join("\\,"),
     Y: dependentVariable,

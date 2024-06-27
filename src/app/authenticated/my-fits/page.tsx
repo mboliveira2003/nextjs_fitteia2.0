@@ -1,7 +1,6 @@
 "use client";
 
 import { RadioGroup } from "@headlessui/react";
-import { PlusIcon } from "@heroicons/react/20/solid";
 import {
   CalendarIcon,
   ClockIcon,
@@ -23,7 +22,7 @@ const TestFits = [
 
 const Page: FC = (): ReactElement => {
   return (
-    <div className="w-full h-full bg-white/[0.025] backdrop-blur-md ring-1 ring-white/[0.075] ring-inset  px-10 py-5 gap-y-8 flex flex-col rounded-lg">
+    <div className="w-full h-full bg-white/[0.025] backdrop-blur-md ring-1 ring-white/[0.075] ring-inset  px-10 py-5 gap-y-8 flex flex-col rounded-lg max-w-screen-2xl">
       <div className="flex flex-row items-end justify-between">
         <div className="flex flex-col items-start">
           <h1 className="text-lg font-semibold text-white">My Fits</h1>

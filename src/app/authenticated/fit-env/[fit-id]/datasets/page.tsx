@@ -5,13 +5,12 @@ import Link from "next/link";
 import React, { FC, ReactElement, useEffect, useState } from "react";
 
 import { ArrowDownTrayIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon } from "@heroicons/react/16/solid";
 import DatasetTable from "./DatasetTable";
 import { Dataset } from "../../../../types";
 import { getDatasets, updateDatasets } from "@/utils/storage";
 import parseCsvContent from "@/utils/parseCsv";
-import { set } from "firebase/database";
 import LoadingCircle from "@/components/visuals/loading/LoadingCircle";
-import AuthAlert from "@/components/auth/AuthAlert";
 
 const Page: FC = (): ReactElement => {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -52,15 +51,16 @@ const Page: FC = (): ReactElement => {
         name: "Dataset " + (datasets.length + 1),
         datapoints: [
           {
-            independentVariable: 0,
+            independentVariable: 1,
             independentVariableError: 0,
-            dependentVariable: 0,
-            dependentVariableError: 0,
+            dependentVariable: 1,
+            dependentVariableError: 0.1,
           },
         ],
         dependentVariableName: "Y Label",
         independentVariableName: "X Label",
-        auxiliarDependentVariables: [{ name: "Auxiliar Variable", value: 0 }],
+        auxiliarIndependentVariablesArray: [1],
+        auxiliarIndependentVariablesArrayName: "dum"
       },
     ]);
   };
@@ -93,9 +93,8 @@ const Page: FC = (): ReactElement => {
                 datapoints: dataPoints,
                 independentVariableName: independentVariableName || "X Label",
                 dependentVariableName: dependentVariableName || "Y Label",
-                auxiliarDependentVariables: [
-                  { name: "Auxiliar Variable", value: 0 },
-                ],
+                auxiliarIndependentVariablesArray: [1],
+                auxiliarIndependentVariablesArrayName: "dum"
               },
             ]);
           } catch (error: any) {
@@ -125,7 +124,7 @@ const Page: FC = (): ReactElement => {
   };
 
   return (
-    <div className="w-full h-fit bg-white/[0.025] ring-inset ring-1 ring-white/[0.075] backdrop-blur-md px-10 py-5 gap-y-8 flex flex-col rounded-lg min-h-full">
+    <div className="w-full h-fit bg-white/[0.025] ring-inset ring-1 ring-white/[0.075] backdrop-blur-md px-10 py-5 gap-y-8 flex flex-col rounded-lg min-h-full max-w-screen-2xl">
       <div className="flex flex-row items-end justify-between">
         {/*Title and description*/}
         <div className="flex flex-col items-start">
@@ -138,9 +137,10 @@ const Page: FC = (): ReactElement => {
         {/*Save and move to functions button*/}
         <Link
           href="/authenticated/fit-env/new/functions"
-          className="flex flex-row items-center cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:scale-[0.98] ease-in-out transition-all duration-150 bg-orange-500 gap-x-1.5 px-3 py-2 rounded-md"
+          className="flex flex-row items-center gap-x-2 cursor-pointer text-sm group justify-center text-white shadow-md shadow-orange-500/10 font-semibold hover:bg-orange-600 ease-in-out transition-all duration-200 bg-orange-500 px-3 py-2 rounded-md"
         >
-          Save and move to functions
+          Next
+          <ArrowRightIcon className="h-4 w-4" />
         </Link>
       </div>
 
@@ -160,9 +160,9 @@ const Page: FC = (): ReactElement => {
         {/*Add dataset button*/}
         <div
           onClick={() => addDataset()}
-          className="flex flex-row  items-center group rounded-md cursor-pointer border border-dashed border-zinc-500 text-sm group justify-center text-orange-500 font-semibold ease-in-out transition-all duration-300 gap-x-1.5 px-3 py-2"
+          className="flex flex-row  items-center group rounded-md cursor-pointer border border-dashed border-zinc-500 text-sm group justify-center hover:bg-white/5  text-orange-500 font-semibold ease-in-out transition-all duration-200 gap-x-1.5 px-3 py-2"
         >
-          <div className="flex flex-row items-center gap-x-1.5 group-hover:scale-105 transition-all ease-in-out duration-150">
+          <div className="flex flex-row items-center gap-x-1.5 transition-all ease-in-out duration-150">
             <PlusIcon className="h-5 w-5" />
             Add dataset
           </div>
@@ -175,7 +175,7 @@ const Page: FC = (): ReactElement => {
         {/*Import CSV button*/}
         <label
           htmlFor="fileInput"
-          className="flex flex-row  items-center group rounded-md cursor-pointer border border-dashed border-zinc-500 text-sm group justify-center text-orange-500 font-semibold ease-in-out transition-all duration-300 gap-x-1.5 px-3 py-2"
+          className="flex flex-row  items-center group rounded-md cursor-pointer border border-dashed border-zinc-500 text-sm group justify-center hover:bg-white/5 text-orange-500 font-semibold ease-in-out transition-all duration-200 gap-x-1.5 px-3 py-2"
         >
           <input
             type="file"
@@ -184,7 +184,7 @@ const Page: FC = (): ReactElement => {
             className="sr-only"
             onChange={addDatasetViaCsv}
           />
-          <div className="flex flex-row items-center gap-x-1.5 group-hover:scale-105 transition-all ease-in-out duration-150">
+          <div className="flex flex-row items-center gap-x-1.5 transition-all ease-in-out duration-150">
             {processingCsv ? (
               <LoadingCircle className="h-5 w-5" />
             ) : (
