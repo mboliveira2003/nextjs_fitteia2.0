@@ -34,7 +34,7 @@ Before you begin, ensure you have the following installed on your system:
    Change to the project directory:
 
    ```bash
-   cd nextjs_fitteia2.0 
+   cd nextjs_fitteia2.0
    ```
 
 3. **Install Dependencies:**
