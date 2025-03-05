@@ -1,4 +1,4 @@
-# Next.js Fitteia 2.0 (fork from mboliveira2003/nextjs_fitteia2.0)
+# Next.js Fitteia 2.0 
 
 Welcome to the Next.js Fitteia 2.0 project! This README will guide you through the steps to run the project locally on your machine.
 
@@ -34,7 +34,7 @@ Before you begin, ensure you have the following installed on your system:
    Change to the project directory:
 
    ```bash
-   cd nextjs_fitteia2.0 && patch -p1 < diff.patch
+   cd nextjs_fitteia2.0 
    ```
 
 3. **Install Dependencies:**
