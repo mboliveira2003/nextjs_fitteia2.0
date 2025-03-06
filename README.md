@@ -26,7 +26,7 @@ Before you begin, ensure you have the following installed on your system:
    Clone the repository to your local machine using the following command:
 
    ```bash
-   git clone https://github.com/mboliveira2003/nextjs_fitteia2.0.git
+   mkdir $HOME/.local && cd $HOME/.local && git clone https://github.com/mboliveira2003/nextjs_fitteia2.0.git
    ```
 
 2. **Navigate to the Project Directory:**
@@ -65,6 +65,12 @@ Before you begin, ensure you have the following installed on your system:
 
    ```bash
    yarn dev
+   ```
+
+   or start as a systemd service:
+
+   ```bash
+   sudo cp fitteia2.0.service /etc/systemd/system && sudo systemctl daemon-reload && sudo systemctl enable fitteia2.0.service && sudo systemctl start fitteia2.0.service
    ```
 
 2. **Access the Application:**

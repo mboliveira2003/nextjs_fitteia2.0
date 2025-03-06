@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start &",
     "lint": "next lint",
     "stop": "kill -9 $(ps aux | awk '/next-server/ && !/awk/ {print $2}')"
   },
