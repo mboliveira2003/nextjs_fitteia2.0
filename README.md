@@ -96,6 +96,7 @@ In the project directory, you can run the following scripts:
 - `npm run build` - Builds the app for production.
 - `npm run start` - Starts the production server.
 - `npm run lint` - Lints the project for potential issues.
+- `npm run stop` - Stops the Next server
 
 ## Contributing
 
