@@ -120,7 +120,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     form.append("file", jsonBlob, "data.json");
 
     const response = await fetch(
-      "http://onefite-t.vps.tecnico.ulisboa.pt:8142/fit",
+      "http://127.0.0.1:8142/fit",
       {
         method: "POST",
         body: form as any,
@@ -208,7 +208,7 @@ function constructSingleDatasetFitRequest(
     Num: 500,
     Dados: `# DATA ${selectedDataset.auxiliarIndependentVariablesArrayName} = ${selectedDataset.auxiliarIndependentVariablesArray.join(" ")}\n# TAG = tags.txt\n${dataString}`,
     FitType: isFitGlobal ? "Global" : "Individual",
-    Function: independentVariable + " = " + processedFunction,
+    Function: dependentVariable + " = " + processedFunction,
     Parameters: parameters.map((param) => param.name).join(","),
     X: independentVariable,
     Xmax: (maxIndependentVariable + independentVariableMargin).toString(),
@@ -329,7 +329,7 @@ function constructMultiDatasetFitRequest(
     Num: 500,
     Dados: dados,
     FitType: isFitGlobal ? "Global" : "Individual",
-    Function: independentVariable + " = " + processedFunction,
+    Function: dependentVariable + " = " + processedFunction,
     Parameters: parameters.map((param) => param.name).join(","),
     X: independentVariable,
     // For each entry in the

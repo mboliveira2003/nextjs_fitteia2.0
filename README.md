@@ -1,4 +1,4 @@
-# Next.js Fitteia 2.0
+# Next.js Fitteia 2.0 
 
 Welcome to the Next.js Fitteia 2.0 project! This README will guide you through the steps to run the project locally on your machine.
 
@@ -26,7 +26,7 @@ Before you begin, ensure you have the following installed on your system:
    Clone the repository to your local machine using the following command:
 
    ```bash
-   git clone https://github.com/mboliveira2003/nextjs_fitteia2.0.git
+   mkdir $HOME/.local && cd $HOME/.local && git clone https://github.com/mboliveira2003/nextjs_fitteia2.0.git
    ```
 
 2. **Navigate to the Project Directory:**
@@ -67,6 +67,12 @@ Before you begin, ensure you have the following installed on your system:
    yarn dev
    ```
 
+   or start as a systemd service:
+
+   ```bash
+   sudo cp fitteia2.0.service /etc/systemd/system && sudo systemctl daemon-reload && sudo systemctl enable fitteia2.0.service && sudo systemctl start fitteia2.0.service
+   ```
+
 2. **Access the Application:**
 
    Open your browser and navigate to [http://localhost:3000](http://localhost:3000) to view the application.
@@ -96,6 +102,7 @@ In the project directory, you can run the following scripts:
 - `npm run build` - Builds the app for production.
 - `npm run start` - Starts the production server.
 - `npm run lint` - Lints the project for potential issues.
+- `npm run stop` - Stops the Next server
 
 ## Contributing
 

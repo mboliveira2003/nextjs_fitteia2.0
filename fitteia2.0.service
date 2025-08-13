@@ -1,0 +1,16 @@
+[Unit]
+Description= next.js fitteia2.0
+Wants=network-online.target
+After=network.target network-online.target
+Documentation=https://github.com/fitteia/nextjs_fitteia2.0
+
+[Service]
+Type=forking
+ExecStart=nohup npm run start 
+ExecStop=/usr/bin/npm run stop
+Restart=always
+WorkingDirectory=/home/ofe/.local/nextjs_fitteia2.0
+User=ofe
+Group=ofe
+[Install]
+WantedBy=multi-user.target
